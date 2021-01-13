@@ -23,7 +23,7 @@ uraitparser --help
 ```
 
 ## Дополнительная информация 
-В данном репозитории содержатся 5 парсеров
+В данном репозитории содержатся следующие парсеры:
 * [IPR Books](http://www.iprbookshop.ru/) -> [ссылка](https://github.com/OnlyFart/ElsParsers/tree/master/Parsers/IprBookShopParser)
 * [Urait](https://urait.ru/) -> [ссылка](https://github.com/OnlyFart/ElsParsers/tree/master/Parsers/UraitParser)
 * [Лань](https://lanbook.com/) -> [ссылка](https://github.com/OnlyFart/ElsParsers/tree/master/Parsers/LanBookParser)
