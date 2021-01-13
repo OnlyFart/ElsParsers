@@ -72,18 +72,21 @@ namespace BiblioclubParser.Logic {
 
             var dataContent = new FormUrlEncodedContent(pairs.ToArray());
             var content = await HttpClientHelper.PostAsync(client, url, dataContent);
-            return string.IsNullOrEmpty(content) ? null : JsonConvert.DeserializeObject<IEnumerable<ShortInfo>>(content);
+            return string.IsNullOrEmpty(content) ? new ShortInfo[]{} : JsonConvert.DeserializeObject<IEnumerable<ShortInfo>>(content);
         }
         
 
         private static async Task<IEnumerable<Book>> GetBib(HttpClient client, ShortInfo[] shortInfos) {
-            if (shortInfos == null) {
-                return null;
+            if (shortInfos == default) {
+                return Enumerable.Empty<Book>();
             }
             
             var resp = await HttpClientHelper.GetStringAsync(client, new Uri("https://biblioclub.ru/index.php?action=blocks&list=" + string.Join(",", shortInfos.Select(s => "biblio:" + s.Id))));
+            if (string.IsNullOrEmpty(resp)) {
+                return Enumerable.Empty<Book>();
+            }
+            
             var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(resp);
-
             return shortInfos.Select(shortInfo => new Book(shortInfo) {Bib = dict["biblio:" + shortInfo.Id]});
         }
     }

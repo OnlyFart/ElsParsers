@@ -35,10 +35,15 @@ namespace Core.Utils.Helpers {
             for (var i = 0; i < MAX_TRY_COUNT; i++) {
                 try {
                     _logger.Debug($"Get {url}");
-                    var response = await client.GetAsync(url);
+                    using var response = await client.GetAsync(url);
                     if (response.StatusCode == HttpStatusCode.NotFound) {
-                        return null;
+                        return default;
                     }
+                    
+                    if (response.StatusCode != HttpStatusCode.OK) {
+                        continue;
+                    }
+                    
                     _logger.Debug($"End {url}. Response {response}");
                     
                     return await response.Content.ReadAsStringAsync();
@@ -47,7 +52,7 @@ namespace Core.Utils.Helpers {
                 }
             }
 
-            return null;
+            return default;
         }
 
         public static async Task<string> PostAsync(HttpClient client, Uri url, ByteArrayContent data) {
@@ -55,6 +60,11 @@ namespace Core.Utils.Helpers {
                 try {
                     _logger.Debug($"Post {url}.");
                     using var response = await client.PostAsync(url, data);
+
+                    if (response.StatusCode != HttpStatusCode.OK) {
+                        continue;
+                    }
+                    
                     var responseString = await response.Content.ReadAsStringAsync();
                     _logger.Debug($"Post {url}. Response {responseString}");
                     
@@ -64,7 +74,7 @@ namespace Core.Utils.Helpers {
                 }
             }
 
-            return null;
+            return default;
         }
     }
 }

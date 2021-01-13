@@ -87,7 +87,7 @@ namespace IprBookShopParser.Logic {
             var bookDescriptionBlock = bookInfoBlock.GetByFilter("div", "col-sm-10").FirstOrDefault();
             foreach (var row in bookDescriptionBlock.GetByFilter("div", "row")) {
                 var strong = row.Descendants().FirstOrDefault(t => t.Name == "strong");
-                if (strong == null || string.IsNullOrWhiteSpace(strong.InnerText)) {
+                if (strong == default || string.IsNullOrWhiteSpace(strong.InnerText)) {
                     continue;
                 }
 
@@ -145,8 +145,9 @@ namespace IprBookShopParser.Logic {
                 new KeyValuePair<string, string>("page", $"{page}"),
                 new KeyValuePair<string, string>("available", "1")
             };
-            
-            return JsonConvert.DeserializeObject<SearchResponseData>(await HttpClientHelper.PostAsync(client, _apiUrl, new FormUrlEncodedContent(values)));
+
+            var content = await HttpClientHelper.PostAsync(client, _apiUrl, new FormUrlEncodedContent(values));
+            return string.IsNullOrEmpty(content) ? new SearchResponseData() : JsonConvert.DeserializeObject<SearchResponseData>(content);
         }
     }
 }

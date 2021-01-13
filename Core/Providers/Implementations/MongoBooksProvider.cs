@@ -32,7 +32,7 @@ namespace Core.Providers.Implementations {
         }
 
         public Task Save(IEnumerable<T> books) {
-            var toSave = books.Where(t => t != null).ToList();
+            var toSave = books.Where(t => t != default).ToList();
             return toSave.Count > 0 ? _collection.InsertManyAsync(toSave) : Task.CompletedTask;
         }
     }

@@ -59,7 +59,7 @@ namespace UraitParser.Logic {
         private static async Task<Book> GetBook(HttpClient client, Uri uri) {
             var content = await HttpClientHelper.GetStringAsync(client, uri);
             if (string.IsNullOrEmpty(content)) {
-                return null;
+                return default;
             }
             
             var doc = new HtmlDocument();

@@ -65,7 +65,7 @@ namespace ZnaniumParser.Logic {
         private static async Task<Book> GetBook(HttpClient client, long id) {
             var content = await HttpClientHelper.GetStringAsync(client, new Uri($"https://znanium.com/catalog/document?id={id}"));
             if (string.IsNullOrEmpty(content)) {
-                return null;
+                return default;
             }
             
             var doc = new HtmlDocument();

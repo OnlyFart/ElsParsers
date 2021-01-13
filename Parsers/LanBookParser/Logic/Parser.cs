@@ -65,8 +65,8 @@ namespace LanBookParser.Logic {
         }
 
         private static IEnumerable<BookShort> Filter(ApiResponse<BooksShortBody> response, IEnumerable<long> processed) {
-            if (response == null) {
-                return new BookShort[]{};
+            if (response == default) {
+                return Enumerable.Empty<BookShort>();
             }
             
             var books = response.Body.Items.Where(t => !processed.Contains(t.Id));
@@ -81,12 +81,13 @@ namespace LanBookParser.Logic {
         /// <param name="bookShort"></param>
         /// <returns></returns>
         private static async Task<Book> GetBook(HttpClient client, BookShort bookShort) {
-            if (bookShort == null) {
-                return null;
+            if (bookShort == default) {
+                return default;
             }
             
             var content = await HttpClientHelper.GetStringAsync(client, new Uri($"https://e.lanbook.com/api/v2/catalog/book/{bookShort.Id}"));
-            return string.IsNullOrEmpty(content) ? null : new Book(bookShort, JsonConvert.DeserializeObject<ApiResponse<BookExtend>>(content).Body);
+            var bookExtend = JsonConvert.DeserializeObject<ApiResponse<BookExtend>>(content);
+            return string.IsNullOrEmpty(content) ? default : new Book(bookShort, bookExtend.Body);
         }
 
         /// <summary>
@@ -99,7 +100,7 @@ namespace LanBookParser.Logic {
             _logger.Info($"Запрашиваем страницу {page}");
             
             var response = await HttpClientHelper.GetStringAsync(client, new Uri(string.Format(_allBooksUrlPattern, page)));
-            return string.IsNullOrEmpty(response) ? null : JsonConvert.DeserializeObject<ApiResponse<BooksShortBody>>(response);
+            return string.IsNullOrEmpty(response) ? default : JsonConvert.DeserializeObject<ApiResponse<BooksShortBody>>(response);
         }
     }
 }
