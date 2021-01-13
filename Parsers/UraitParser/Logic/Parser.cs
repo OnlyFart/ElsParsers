@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
@@ -28,7 +29,7 @@ namespace UraitParser.Logic {
         
         public async Task Parse() {
             var client = HttpClientHelper.GetClient(_config);
-            
+
             var processed = _provider.GetProcessed().ContinueWith(t => new HashSet<long>(t.Result));
             
             var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(async uris => Filter(uris, await processed));
@@ -91,10 +92,16 @@ namespace UraitParser.Logic {
             foreach (var div in doc.DocumentNode.GetByFilter("div", "book-about-info__item")) {
                 var name = div.GetByFilter("div", "book-about-info__title").FirstOrDefault()?.InnerText.ToLower().Trim();
                 var value = string.Join(", ", div.GetByFilter("div", "book-about-info__info").Select(t => t.InnerText.Trim()));
-
-
+                
                 if (!string.IsNullOrEmpty(name) && name.Contains("библиографическое описание")) {
                     book.Bib = value;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(book.Bib)) {
+                var publisher = Regex.Match(book.Bib, "Издательство (.*?),");
+                if (publisher.Success) {
+                    book.Bib = publisher.Groups[1].Value;
                 }
             }
 
