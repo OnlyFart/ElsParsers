@@ -14,13 +14,13 @@ using Newtonsoft.Json;
 using NLog;
 
 namespace IprBookShopParser.Logic {
-    public class IprParser {
-        private static readonly Logger _logger = LogManager.GetLogger(nameof(IprParser));
+    public class Parser {
+        private static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
         
         private readonly IParserConfig _config;
         private readonly IBooksProvider<Book> _provider;
 
-        public IprParser(IParserConfig config, IBooksProvider<Book> provider) {
+        public Parser(IParserConfig config, IBooksProvider<Book> provider) {
             _config = config;
             _provider = provider;
         }
@@ -35,15 +35,15 @@ namespace IprBookShopParser.Logic {
             var processed = new HashSet<long>(await _provider.GetProcessed());
 
             var getPageBlock = new TransformBlock<int, SearchResponseData>(async page => await GetSearchResponse(client, page));
-            CompleteMessage(getPageBlock, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
+            getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
             
             var filterBlock = new TransformManyBlock<SearchResponseData, SearchData>(page => page.Data.Where(t => !processed.Contains(t.Id)));
             var getBookBlock = new TransformBlock<SearchData, Book>(async book => await GetBook(client, book.Id), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
-            CompleteMessage(getBookBlock, "Получение всех книг завершено. Ждем сохранения.");
+            getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<Book>(_config.BatchSize);
             var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.Save(books));
-            CompleteMessage(saveBookBlock, "Сохранения завершено. Работа программы завершена.");
+            saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             getPageBlock.LinkTo(filterBlock);
             filterBlock.LinkTo(getBookBlock);
@@ -60,10 +60,6 @@ namespace IprBookShopParser.Logic {
             }
 
             await DataflowExtension.WaitBlocks(getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock);
-        }
-        
-        private static void CompleteMessage(IDataflowBlock block, string message) {
-            block.Completion.ContinueWith(task => _logger.Info(message)).GetAwaiter();
         }
 
         /// <summary>
@@ -84,8 +80,8 @@ namespace IprBookShopParser.Logic {
 
             var book = new Book {
                 Id = id,
-                Name = Book.Normalize(bookInfoBlock.GetByFilter("h4", "header-orange").FirstOrDefault().InnerText),
-                Bib = Book.Normalize(bookInfoBlock.GetByFilter("h3", "header-green").FirstOrDefault().NextSibling.NextSibling.InnerText)
+                Name = Book.Normalize(bookInfoBlock?.GetByFilter("h4", "header-orange")?.FirstOrDefault()?.InnerText),
+                Bib = Book.Normalize(bookInfoBlock?.GetByFilter("h3", "header-green")?.FirstOrDefault()?.NextSibling.NextSibling.InnerText)
             };
 
             var bookDescriptionBlock = bookInfoBlock.GetByFilter("div", "col-sm-10").FirstOrDefault();
@@ -121,7 +117,7 @@ namespace IprBookShopParser.Logic {
         }
 
         private static string GetDescription(HtmlNode node) {
-            return node.GetByFilter("div", "col-sm-9").FirstOrDefault().InnerText.Trim();
+            return node.GetByFilter("div", "col-sm-9").FirstOrDefault()?.InnerText.Trim();
         }
 
         /// <summary>

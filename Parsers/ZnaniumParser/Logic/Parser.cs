@@ -34,15 +34,15 @@ namespace ZnaniumParser.Logic {
             var processed = _provider.GetProcessed().ContinueWith(t => new HashSet<long>(t.Result));
 
             var getPageBlock = new TransformBlock<Uri, SitemapFile>(async url => await GetLinksSitemaps(client, url));
-            CompleteMessage(getPageBlock, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
+            getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
             
             var filterBlock = new TransformManyBlock<SitemapFile, long>(async sitemap => Filter(sitemap, await processed));
             var getBookBlock = new TransformBlock<long, Book>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
-            CompleteMessage(getBookBlock, "Получение всех книг завершено. Ждем сохранения.");
+            getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<Book>(_config.BatchSize);
             var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.Save(books));
-            CompleteMessage(saveBookBlock, "Сохранения завершено. Работа программы завершена.");
+            saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             getPageBlock.LinkTo(filterBlock);
             filterBlock.LinkTo(getBookBlock);
@@ -54,10 +54,6 @@ namespace ZnaniumParser.Logic {
             }
 
             await DataflowExtension.WaitBlocks(getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock);
-        }
-        
-        private static void CompleteMessage(IDataflowBlock block, string message) {
-            block.Completion.ContinueWith(task => _logger.Info(message)).GetAwaiter();
         }
 
         /// <summary>
@@ -80,7 +76,7 @@ namespace ZnaniumParser.Logic {
 
             var book = new Book {
                 Id = id,
-                Name = bookInfoBlock.GetByFilter("h1").FirstOrDefault().InnerText.Trim(),
+                Name = bookInfoBlock.GetByFilter("h1").FirstOrDefault()?.InnerText.Trim(),
                 Bib = doc.GetElementbyId("doc-biblio-card").InnerText.Trim()
             };
 
@@ -96,19 +92,19 @@ namespace ZnaniumParser.Logic {
             }
             
             foreach (var div in bookContent.GetByFilter("div", "book-chars__inner")) {
-                var name = div.GetByFilter("div", "book-chars__name").FirstOrDefault().InnerText.ToLower().Trim();
+                var name = div.GetByFilter("div", "book-chars__name").FirstOrDefault()?.InnerText.ToLower().Trim();
                 if (string.IsNullOrEmpty(name)) {
                     continue;
                 }
                 
-                var value = div.GetByFilter("div", "book-chars__view").FirstOrDefault().InnerText.Trim();
+                var value = div.GetByFilter("div", "book-chars__view").FirstOrDefault()?.InnerText.Trim();
 
                 if (name == "isbn") {
                     book.ISBN = value;
                 } else if (name.Contains("страниц")) {
                     int.TryParse(value, out book.Pages);
                 } else if (name.Contains("год")) {
-                    int.TryParse(value, out book.Year);
+                    book.Year = value;
                 } else if (name.Contains("артикул")) {
                     book.Article = value;
                 } else if (name.Contains("isbn-онлайн")) {

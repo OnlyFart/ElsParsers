@@ -9,7 +9,7 @@ namespace LanBookParser {
             await Parser.Default.ParseArguments<Options>(args)
                 .WithParsedAsync(async options => {
                     var kernel = new StandardKernel(new IoC.Ninject(options));
-                    await kernel.Get<Logic.LanBookParser>().Parse();
+                    await kernel.Get<Logic.Parser>().Parse();
                 });
         }
     }

@@ -18,12 +18,5 @@ namespace BiblioclubParser.Types {
         }
 
         public string Disciple;
-        public string Authors;
-        public string ISBN;
-        public string Publisher;
-        public string Name;
-        public string Year;
-        public string Bib;
-        public int Pages;
     }
 }

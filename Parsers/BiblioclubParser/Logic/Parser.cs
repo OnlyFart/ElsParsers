@@ -34,16 +34,16 @@ namespace BiblioclubParser.Logic {
 
             var batchBlock1 = new BatchBlock<long>(1000);
             var getPageBlock = new TransformBlock<long[], IEnumerable<ShortInfo>>(async ids => await GetShortInfo(client, _apiUrl, ids));
-            CompleteMessage(getPageBlock, "Получение краткой информации по всем книгам завершено. Ждем получения библиографического описания.");
+            getPageBlock.CompleteMessage(_logger, "Получение краткой информации по всем книгам завершено. Ждем получения библиографического описания.");
             
             var filterBlock = new TransformManyBlock<IEnumerable<ShortInfo>, ShortInfo>(async shortInfos => Filter(shortInfos, await processed));
             var batchBlock2 = new BatchBlock<ShortInfo>(50);
             var getBibBlock = new TransformManyBlock<ShortInfo[], Book>(async books => await GetBib(client, books), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false });
-            CompleteMessage(getBibBlock, "Получения библиографического описания по всем книгам завершено. Ждем сохранения.");
+            getBibBlock.CompleteMessage(_logger, "Получения библиографического описания по всем книгам завершено. Ждем сохранения.");
             
             var batchBlock3 = new BatchBlock<Book>(_config.BatchSize);
             var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.Save(books));
-            CompleteMessage(saveBookBlock, "Сохранения завершено. Работа программы завершена.");
+            saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             batchBlock1.LinkTo(getPageBlock);
             getPageBlock.LinkTo(filterBlock);
@@ -59,12 +59,8 @@ namespace BiblioclubParser.Logic {
             await DataflowExtension.WaitBlocks(batchBlock1, getPageBlock, filterBlock, batchBlock2, getBibBlock, batchBlock3, saveBookBlock);
         }
 
-        private static void CompleteMessage(IDataflowBlock block, string message) {
-            block.Completion.ContinueWith(task => _logger.Info(message)).GetAwaiter();
-        }
-        
         private static IEnumerable<ShortInfo> Filter(IEnumerable<ShortInfo> shortInfos, ICollection<long> processed) {
-            return shortInfos.Where(shortInfo => !processed.Contains(shortInfo.Id));
+            return shortInfos?.Where(shortInfo => !processed.Contains(shortInfo.Id));
         }
 
         private static async Task<IEnumerable<ShortInfo>> GetShortInfo(HttpClient client, Uri url, IEnumerable<long> ids) {
@@ -75,11 +71,16 @@ namespace BiblioclubParser.Logic {
             pairs.AddRange(ids.Select(id => new KeyValuePair<string, string>("books_ids[]", id.ToString())));
 
             var dataContent = new FormUrlEncodedContent(pairs.ToArray());
-            return JsonConvert.DeserializeObject<IEnumerable<ShortInfo>>(await HttpClientHelper.PostAsync(client, url, dataContent));
+            var content = await HttpClientHelper.PostAsync(client, url, dataContent);
+            return string.IsNullOrEmpty(content) ? null : JsonConvert.DeserializeObject<IEnumerable<ShortInfo>>(content);
         }
         
 
         private static async Task<IEnumerable<Book>> GetBib(HttpClient client, ShortInfo[] shortInfos) {
+            if (shortInfos == null) {
+                return null;
+            }
+            
             var resp = await HttpClientHelper.GetStringAsync(client, new Uri("https://biblioclub.ru/index.php?action=blocks&list=" + string.Join(",", shortInfos.Select(s => "biblio:" + s.Id))));
             var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(resp);
 

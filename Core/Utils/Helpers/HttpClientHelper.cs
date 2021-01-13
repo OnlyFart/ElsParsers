@@ -7,6 +7,8 @@ using NLog;
 
 namespace Core.Utils.Helpers {
     public class HttpClientHelper {
+        private const int MAX_TRY_COUNT = 3;
+        
         private static readonly Logger _logger = LogManager.GetLogger(nameof(HttpClientHelper));
         
         /// <summary>
@@ -30,13 +32,16 @@ namespace Core.Utils.Helpers {
         }
         
         public static async Task<string> GetStringAsync(HttpClient client, Uri url) {
-            for (var i = 0; i < 3; i++) {
+            for (var i = 0; i < MAX_TRY_COUNT; i++) {
                 try {
                     _logger.Debug($"Get {url}");
-                    var response = await client.GetStringAsync(url);
+                    var response = await client.GetAsync(url);
+                    if (response.StatusCode == HttpStatusCode.NotFound) {
+                        return null;
+                    }
                     _logger.Debug($"End {url}. Response {response}");
                     
-                    return response;
+                    return await response.Content.ReadAsStringAsync();
                 } catch (Exception e) {
                     _logger.Error(e.ToString());
                 }
@@ -46,7 +51,7 @@ namespace Core.Utils.Helpers {
         }
 
         public static async Task<string> PostAsync(HttpClient client, Uri url, ByteArrayContent data) {
-            for (var i = 0; i < 3; i++) {
+            for (var i = 0; i < MAX_TRY_COUNT; i++) {
                 try {
                     _logger.Debug($"Post {url}.");
                     using var response = await client.PostAsync(url, data);

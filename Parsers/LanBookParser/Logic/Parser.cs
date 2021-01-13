@@ -16,13 +16,13 @@ using Newtonsoft.Json;
 using NLog;
 
 namespace LanBookParser.Logic {
-    public class LanBookParser {
-        private static readonly Logger _logger = LogManager.GetLogger(nameof(LanBookParser));
+    public class Parser {
+        private static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
         
         private readonly IParserConfig _config;
         private readonly IBooksProvider<Book> _provider;
 
-        public LanBookParser(IParserConfig config, IBooksProvider<Book> provider) {
+        public Parser(IParserConfig config, IBooksProvider<Book> provider) {
             _config = config;
             _provider = provider;
         }
@@ -34,22 +34,18 @@ namespace LanBookParser.Logic {
         public async Task Parse() {
             var client = HttpClientHelper.GetClient(_config);
             
-            var processed = new HashSet<long>(await _provider.GetProcessed());
+            var processed = _provider.GetProcessed().ContinueWith(t => new HashSet<long>(t.Result));
 
             var getPageBlock = new TransformBlock<int, ApiResponse<BooksShortBody>>(async page => await GetSearchResponse(client, page));
-            CompleteMessage(getPageBlock, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
+            getPageBlock.CompleteMessage(_logger, "Обход всего каталога успешно завершен. Ждем получения всех книг.");
             
-            var filterBlock = new TransformManyBlock<ApiResponse<BooksShortBody>, BookShort>(page => {
-                var books = page.Body.Items.Where(t => !processed.Contains(t.Id));
-                var extra = page.Body.Extra.Where(t => !processed.Contains(t.Id));
-                return books.Union(extra);
-            });
+            var filterBlock = new TransformManyBlock<ApiResponse<BooksShortBody>, BookShort>(async reponse => Filter(reponse, await processed));
             var getBookBlock = new TransformBlock<BookShort, Book>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
-            CompleteMessage(getBookBlock, "Получение всех книг завершено. Ждем сохранения.");
+            getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<Book>(_config.BatchSize);
             var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.Save(books));
-            CompleteMessage(saveBookBlock, "Сохранения завершено. Работа программы завершена.");
+            saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             getPageBlock.LinkTo(filterBlock);
             filterBlock.LinkTo(getBookBlock);
@@ -67,9 +63,15 @@ namespace LanBookParser.Logic {
 
             await DataflowExtension.WaitBlocks(getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock);
         }
-        
-        private static void CompleteMessage(IDataflowBlock block, string message) {
-            block.Completion.ContinueWith(task => _logger.Info(message)).GetAwaiter();
+
+        private static IEnumerable<BookShort> Filter(ApiResponse<BooksShortBody> response, IEnumerable<long> processed) {
+            if (response == null) {
+                return new BookShort[]{};
+            }
+            
+            var books = response.Body.Items.Where(t => !processed.Contains(t.Id));
+            var extra = response.Body.Extra.Where(t => !processed.Contains(t.Id));
+            return books.Union(extra);
         }
 
         /// <summary>
@@ -79,8 +81,12 @@ namespace LanBookParser.Logic {
         /// <param name="bookShort"></param>
         /// <returns></returns>
         private static async Task<Book> GetBook(HttpClient client, BookShort bookShort) {
+            if (bookShort == null) {
+                return null;
+            }
+            
             var content = await HttpClientHelper.GetStringAsync(client, new Uri($"https://e.lanbook.com/api/v2/catalog/book/{bookShort.Id}"));
-            return new Book(bookShort, JsonConvert.DeserializeObject<ApiResponse<BookExtend>>(content).Body);
+            return string.IsNullOrEmpty(content) ? null : new Book(bookShort, JsonConvert.DeserializeObject<ApiResponse<BookExtend>>(content).Body);
         }
 
         /// <summary>
@@ -93,8 +99,7 @@ namespace LanBookParser.Logic {
             _logger.Info($"Запрашиваем страницу {page}");
             
             var response = await HttpClientHelper.GetStringAsync(client, new Uri(string.Format(_allBooksUrlPattern, page)));
-            var deserializeObject = JsonConvert.DeserializeObject<ApiResponse<BooksShortBody>>(response);
-            return deserializeObject;
+            return string.IsNullOrEmpty(response) ? null : JsonConvert.DeserializeObject<ApiResponse<BooksShortBody>>(response);
         }
     }
 }

@@ -12,11 +12,11 @@ namespace ZnaniumParser.IoC {
         public Ninject(Options options) {
             _options = options;
         }
-        
+
         public override void Load() {
             base.Load();
 
-            Bind<IMongoConfig>().ToConstant((IMongoConfig)_options);
+            Bind<IMongoConfig>().ToConstant((IMongoConfig) _options);
             Bind<IParserConfig>().ToConstant((IParserConfig) _options);
             Bind<IBooksProvider<Book>>().To<MongoBooksProvider<Book>>();
         }

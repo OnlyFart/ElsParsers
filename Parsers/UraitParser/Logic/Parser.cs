@@ -32,14 +32,14 @@ namespace UraitParser.Logic {
             var processed = _provider.GetProcessed().ContinueWith(t => new HashSet<long>(t.Result));
             
             var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(async uris => Filter(uris, await processed));
-            CompleteMessage(filterBlock, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
+            filterBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
             
             var getBookBlock = new TransformBlock<Uri, Book>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
-            CompleteMessage(getBookBlock, "Получение всех книг завершено. Ждем сохранения.");
+            getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<Book>(_config.BatchSize);
             var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.Save(books));
-            CompleteMessage(saveBookBlock, "Сохранения завершено. Работа программы завершена.");
+            saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
             
             filterBlock.LinkTo(getBookBlock);
             getBookBlock.LinkTo(batchBlock);
@@ -48,10 +48,6 @@ namespace UraitParser.Logic {
             await filterBlock.SendAsync(await GetLinksSitemaps(client, new Uri("https://urait.ru/sitemap.xml")));
             
             await DataflowExtension.WaitBlocks(filterBlock, getBookBlock, batchBlock, saveBookBlock);
-        }
-        
-        private static void CompleteMessage(IDataflowBlock block, string message) {
-            block.Completion.ContinueWith(task => _logger.Info(message)).GetAwaiter();
         }
 
         /// <summary>
@@ -70,34 +66,34 @@ namespace UraitParser.Logic {
             doc.LoadHtml(content);
 
             var book = new Book {
-                Id = int.Parse(uri.Segments.Last().Split("-").Last()),
-                Name = doc.DocumentNode.GetByFilter("h1", "book_title").FirstOrDefault().InnerText.Trim(),
-                Authors = doc.DocumentNode.GetByFilter("ul", "creation-info__authors")?.FirstOrDefault()?.FirstChild?.InnerText?.Trim(),
+                Id = int.Parse(uri.Segments.Last().Split("-").Last()), 
+                Name = doc.DocumentNode.GetByFilter("h1", "book_title").FirstOrDefault()?.InnerText.Trim(), 
+                Authors = doc.DocumentNode.GetByFilter("ul", "creation-info__authors")?.FirstOrDefault()?.FirstChild?.InnerText?.Trim(), 
+                Year = doc.DocumentNode.GetByFilter("div", "creation-info__year")?.FirstOrDefault()?.InnerText?.Trim(),
             };
 
-            int.TryParse(doc.DocumentNode.GetByFilter("div", "creation-info__year")?.FirstOrDefault()?.InnerText?.Trim(), out book.Year);
-            
+
             foreach (var div in doc.DocumentNode.GetByFilter("div", "book-about-produce__item")) {
-                var name = div.GetByFilter("span", "book-about-produce__title").FirstOrDefault().InnerText.ToLower().Trim();
+                var name = div.GetByFilter("span", "book-about-produce__title").FirstOrDefault()?.InnerText.ToLower().Trim();
+                if (string.IsNullOrEmpty(name)) {
+                    continue;
+                }
+                
                 var value = string.Join(", ", div.GetByFilter("span", "book-about-produce__info").Select(t => t.InnerText.Trim()));
 
                 if (name == "isbn") {
                     book.ISBN = value;
                 } else if (name.Contains("страниц")) {
                     int.TryParse(value, out book.Pages);
-                } else if (name.Contains("год")) {
-                    int.TryParse(value, out book.Year);
-                } else if (name.Contains("библиографическое описание")) {
-                    book.Bib = value;
                 }
             }
             
             foreach (var div in doc.DocumentNode.GetByFilter("div", "book-about-info__item")) {
-                var name = div.GetByFilter("div", "book-about-info__title").FirstOrDefault().InnerText.ToLower().Trim();
+                var name = div.GetByFilter("div", "book-about-info__title").FirstOrDefault()?.InnerText.ToLower().Trim();
                 var value = string.Join(", ", div.GetByFilter("div", "book-about-info__info").Select(t => t.InnerText.Trim()));
 
 
-                if (name.Contains("библиографическое описание")) {
+                if (!string.IsNullOrEmpty(name) && name.Contains("библиографическое описание")) {
                     book.Bib = value;
                 }
             }
