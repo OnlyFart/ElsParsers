@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using CommandLine;
 using IprBookShopParser.Configs;
-using IprBookShopParser.Logic;
 using Ninject;
 using Parser = IprBookShopParser.Logic.Parser;
 

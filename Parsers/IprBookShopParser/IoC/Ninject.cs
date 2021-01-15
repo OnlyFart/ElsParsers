@@ -18,7 +18,7 @@ namespace IprBookShopParser.IoC {
 
             Bind<IMongoConfig>().ToConstant((IMongoConfig) _options);
             Bind<IParserConfig>().ToConstant((IParserConfig) _options);
-            Bind<IBooksProvider<Book>>().To<MongoBooksProvider<Book>>();
+            Bind<IRepository<Book>>().To<MongoRepository<Book>>();
         }
     }
 }

@@ -18,9 +18,9 @@ namespace IprBookShopParser.Logic {
         private static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
         
         private readonly IParserConfig _config;
-        private readonly IBooksProvider<Book> _provider;
+        private readonly IRepository<Book> _provider;
 
-        public Parser(IParserConfig config, IBooksProvider<Book> provider) {
+        public Parser(IParserConfig config, IRepository<Book> provider) {
             _config = config;
             _provider = provider;
         }
@@ -32,7 +32,7 @@ namespace IprBookShopParser.Logic {
         public async Task Parse() {
             var client = HttpClientHelper.GetClient(_config);
             
-            var processed = new HashSet<long>(await _provider.GetProcessed());
+            var processed = await _provider.ReadProjection(book => book.Id).ContinueWith(t => new HashSet<long>(t.Result));
 
             var getPageBlock = new TransformBlock<int, SearchResponseData>(async page => await GetSearchResponse(client, page));
             getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
@@ -42,7 +42,7 @@ namespace IprBookShopParser.Logic {
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<Book>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.Save(books));
+            var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.CreateMany(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             getPageBlock.LinkTo(filterBlock);

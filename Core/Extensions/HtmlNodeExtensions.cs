@@ -8,6 +8,10 @@ namespace Core.Extensions {
             return node.Descendants().Where(t => t.Name == name && t.Attributes["class"]?.Value?.Contains(className) == true);
         }
         
+        public static IEnumerable<HtmlNode> GetByFilterEq(this HtmlNode node, string name, string className) {
+            return node.Descendants().Where(t => t.Name == name && t.Attributes["class"]?.Value == className);
+        }
+        
         public static IEnumerable<HtmlNode> GetByFilter(this HtmlNode node, string name) {
             return node.Descendants().Where(t => t.Name == name);
         }

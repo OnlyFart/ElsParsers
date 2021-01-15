@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Parsers", "Parsers", "{F75E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{006F1D4E-A7F6-4808-8E56-2519B3DCE25F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox", "Sandbox\Sandbox.csproj", "{558AC21C-5B6A-4CB8-8A7D-FC3CF786F2F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,8 @@ Global
 		{006F1D4E-A7F6-4808-8E56-2519B3DCE25F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{006F1D4E-A7F6-4808-8E56-2519B3DCE25F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{006F1D4E-A7F6-4808-8E56-2519B3DCE25F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{558AC21C-5B6A-4CB8-8A7D-FC3CF786F2F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{558AC21C-5B6A-4CB8-8A7D-FC3CF786F2F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9555FC84-CBDA-4383-A1A4-2058AAF4481E} = {F75E8EAD-5C09-46EF-B042-F0E86D0D1604}

@@ -21,9 +21,9 @@ namespace ZnaniumParser.Logic {
         private static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
         
         private readonly IParserConfig _config;
-        private readonly IBooksProvider<Book> _provider;
+        private readonly IRepository<Book> _provider;
 
-        public Parser(IParserConfig config, IBooksProvider<Book> provider) {
+        public Parser(IParserConfig config, IRepository<Book> provider) {
             _config = config;
             _provider = provider;
         }
@@ -31,7 +31,7 @@ namespace ZnaniumParser.Logic {
         public async Task Parse() {
             var client = HttpClientHelper.GetClient(_config);
             
-            var processed = _provider.GetProcessed().ContinueWith(t => new HashSet<long>(t.Result));
+            var processed = _provider.ReadProjection(t => t.Id).ContinueWith(t => new HashSet<long>(t.Result));
 
             var getPageBlock = new TransformBlock<Uri, SitemapFile>(async url => await GetLinksSitemaps(client, url));
             getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
@@ -41,7 +41,7 @@ namespace ZnaniumParser.Logic {
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<Book>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.Save(books));
+            var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.CreateMany(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             getPageBlock.LinkTo(filterBlock);
