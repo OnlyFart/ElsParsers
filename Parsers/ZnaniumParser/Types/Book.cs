@@ -1,4 +1,4 @@
-using Core.Types;
+using BookCore.Types;
 
 namespace ZnaniumParser.Types {
     /// <summary>

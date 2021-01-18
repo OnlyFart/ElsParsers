@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Core.Types;
+using BookCore.Types;
 using LanBookParser.Types.API.BooksExtend;
 using LanBookParser.Types.API.BooksShort;
 

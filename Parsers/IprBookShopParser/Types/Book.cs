@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using Core.Types;
+using BookCore.Types;
 
 namespace IprBookShopParser.Types {
     /// <summary>

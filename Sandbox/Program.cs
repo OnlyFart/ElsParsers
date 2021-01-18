@@ -9,7 +9,6 @@ using System.Threading.Tasks.Dataflow;
 using Core.Configs;
 using Core.Extensions;
 using Core.Providers.Implementations;
-using Core.Utils.Helpers;
 using HtmlAgilityPack;
 using TurnerSoftware.SitemapTools;
 using TurnerSoftware.SitemapTools.Parser;
@@ -41,7 +40,7 @@ namespace Sandbox {
         }
         
         private static async Task<SitemapFile> GetLinksSitemaps(HttpClient client, Uri sitemap) {
-            var rootSitemap = await HttpClientHelper.GetStringAsync(client, sitemap);
+            var rootSitemap = await client.GetStringWithTriesAsync(sitemap);
 
             using var reader = new StringReader(rootSitemap);
             return await new XmlSitemapParser().ParseSitemapAsync(reader);
@@ -52,7 +51,7 @@ namespace Sandbox {
         }
 
         public static async Task Main(string[] args) {
-            var client = HttpClientHelper.GetClient(new ParserConfig{Proxy = "127.0.0.1:8888"});
+            var client = HttpClientExtensions.GetClient(new ParserConfig{Proxy = "127.0.0.1:8888"});
             
             var mongoProvider = new MongoRepository<School>(new MongoConfig());
 
@@ -78,7 +77,7 @@ namespace Sandbox {
             batchBlock.LinkTo(saveBookBlock);
             
             Parallel.ForEach(toProcess, new ParallelOptions {MaxDegreeOfParallelism = 10}, url => {
-                var content = HttpClientHelper.GetStringAsync(client, url).Result;
+                var content = client.GetStringWithTriesAsync(url).Result;
                 if (string.IsNullOrEmpty(content)) {
                     Console.WriteLine($"NULL {url}");
                     return;

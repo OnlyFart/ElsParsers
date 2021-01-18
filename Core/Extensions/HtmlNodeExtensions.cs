@@ -3,7 +3,18 @@ using System.Linq;
 using HtmlAgilityPack;
 
 namespace Core.Extensions {
+    /// <summary>
+    /// 
+    /// </summary>
     public static class HtmlNodeExtensions {
+        public static HtmlNode GetByFilterFirst(this HtmlNode node, string name, string className) {
+            return GetByFilter(node, name, className).FirstOrDefault();
+        }
+        
+        public static HtmlNode GetByFilterFirst(this HtmlNode node, string name) {
+            return GetByFilter(node, name).FirstOrDefault();
+        }
+        
         public static IEnumerable<HtmlNode> GetByFilter(this HtmlNode node, string name, string className) {
             return node.Descendants().Where(t => t.Name == name && t.Attributes["class"]?.Value?.Contains(className) == true);
         }

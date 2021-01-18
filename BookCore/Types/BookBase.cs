@@ -1,4 +1,4 @@
-namespace Core.Types {
+﻿namespace BookCore.Types {
     public abstract class BookBase {
         /// <summary>
         /// Идентификатор книги

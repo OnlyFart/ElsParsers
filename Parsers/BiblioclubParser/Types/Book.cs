@@ -1,5 +1,5 @@
 using BiblioclubParser.Types.API;
-using Core.Types;
+using BookCore.Types;
 
 namespace BiblioclubParser.Types {
     /// <summary>

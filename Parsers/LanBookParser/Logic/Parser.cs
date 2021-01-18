@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
-using Core.Utils.Helpers;
 using LanBookParser.Configs;
 using LanBookParser.Types;
 using LanBookParser.Types.API;
@@ -32,7 +31,7 @@ namespace LanBookParser.Logic {
         private static readonly string _allBooksUrlPattern = "https://e.lanbook.com/api/v2/catalog/books?category=0&limit=" + BOOKS_PER_PAGE  + "&page={0}";
 
         public async Task Parse() {
-            var client = HttpClientHelper.GetClient(_config);
+            var client = HttpClientExtensions.GetClient(_config);
             
             var processed = _provider.ReadProjection(book => book.Id).ContinueWith(t => new HashSet<long>(t.Result));
 
@@ -85,7 +84,7 @@ namespace LanBookParser.Logic {
                 return default;
             }
             
-            var content = await HttpClientHelper.GetStringAsync(client, new Uri($"https://e.lanbook.com/api/v2/catalog/book/{bookShort.Id}"));
+            var content = await client.GetStringWithTriesAsync(new Uri($"https://e.lanbook.com/api/v2/catalog/book/{bookShort.Id}"));
             var bookExtend = JsonConvert.DeserializeObject<ApiResponse<BookExtend>>(content);
             return string.IsNullOrEmpty(content) ? default : new Book(bookShort, bookExtend.Body);
         }
@@ -99,7 +98,7 @@ namespace LanBookParser.Logic {
         private static async Task<ApiResponse<BooksShortBody>> GetSearchResponse(HttpClient client, int page) {
             _logger.Info($"Запрашиваем страницу {page}");
             
-            var response = await HttpClientHelper.GetStringAsync(client, new Uri(string.Format(_allBooksUrlPattern, page)));
+            var response = await client.GetStringWithTriesAsync(new Uri(string.Format(_allBooksUrlPattern, page)));
             return string.IsNullOrEmpty(response) ? default : JsonConvert.DeserializeObject<ApiResponse<BooksShortBody>>(response);
         }
     }

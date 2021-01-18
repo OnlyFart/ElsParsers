@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 using Core.Configs;
 using NLog;
 
-namespace Core.Utils.Helpers {
-    public class HttpClientHelper {
+namespace Core.Extensions {
+    public static class HttpClientExtensions {
         private const int MAX_TRY_COUNT = 3;
         
-        private static readonly Logger _logger = LogManager.GetLogger(nameof(HttpClientHelper));
+        private static readonly Logger _logger = LogManager.GetLogger(nameof(HttpClientExtensions));
         
         /// <summary>
         /// Создание HttpClient'a для обхода сайта
@@ -31,7 +31,7 @@ namespace Core.Utils.Helpers {
             return httpClient;
         }
         
-        public static async Task<string> GetStringAsync(HttpClient client, Uri url) {
+        public static async Task<string> GetStringWithTriesAsync(this HttpClient client, Uri url) {
             for (var i = 0; i < MAX_TRY_COUNT; i++) {
                 try {
                     _logger.Debug($"Get {url}");
@@ -55,7 +55,7 @@ namespace Core.Utils.Helpers {
             return default;
         }
 
-        public static async Task<string> PostAsync(HttpClient client, Uri url, ByteArrayContent data) {
+        public static async Task<string> PostWithTriesAsync(this HttpClient client, Uri url, ByteArrayContent data) {
             for (var i = 0; i < MAX_TRY_COUNT; i++) {
                 try {
                     _logger.Debug($"Post {url}.");

@@ -34,7 +34,13 @@ namespace Core.Providers.Implementations {
 
         public Task CreateMany(IEnumerable<T> items) {
             var toSave = items.Where(t => t != null).ToList();
-            return toSave.Count > 0 ? _collection.InsertManyAsync(toSave) : Task.CompletedTask;
+
+            if (toSave.Count > 0) {
+                _logger.Info($"Сохраняем {toSave.Count} объектов");
+                return _collection.InsertManyAsync(toSave);
+            }
+            
+            return Task.CompletedTask;
         }
     }
 }

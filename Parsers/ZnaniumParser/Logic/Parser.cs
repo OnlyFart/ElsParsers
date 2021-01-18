@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Web;
 using Core.Extensions;
 using Core.Providers.Interfaces;
-using Core.Utils.Helpers;
 using HtmlAgilityPack;
 using NLog;
 using TurnerSoftware.SitemapTools;
@@ -29,7 +27,7 @@ namespace ZnaniumParser.Logic {
         }
         
         public async Task Parse() {
-            var client = HttpClientHelper.GetClient(_config);
+            var client = HttpClientExtensions.GetClient(_config);
             
             var processed = _provider.ReadProjection(t => t.Id).ContinueWith(t => new HashSet<long>(t.Result));
 
@@ -63,7 +61,7 @@ namespace ZnaniumParser.Logic {
         /// <param name="id"></param>
         /// <returns></returns>
         private static async Task<Book> GetBook(HttpClient client, long id) {
-            var content = await HttpClientHelper.GetStringAsync(client, new Uri($"https://znanium.com/catalog/document?id={id}"));
+            var content = await client.GetStringWithTriesAsync(new Uri($"https://znanium.com/catalog/document?id={id}"));
             if (string.IsNullOrEmpty(content)) {
                 return default;
             }
@@ -71,18 +69,18 @@ namespace ZnaniumParser.Logic {
             var doc = new HtmlDocument();
             doc.LoadHtml(content);
             
-            var bookContent = doc.DocumentNode.GetByFilter("div", "book-content").FirstOrDefault();
-            var bookInfoBlock = bookContent.GetByFilter("div", "desktop-book-header").FirstOrDefault();
+            var bookContent = doc.DocumentNode.GetByFilterFirst("div", "book-content");
+            var bookInfoBlock = bookContent.GetByFilterFirst("div", "desktop-book-header");
 
             var book = new Book {
                 Id = id,
-                Name = bookInfoBlock.GetByFilter("h1").FirstOrDefault()?.InnerText.Trim(),
+                Name = bookInfoBlock.GetByFilterFirst("h1")?.InnerText.Trim(),
                 Bib = doc.GetElementbyId("doc-biblio-card").InnerText.Trim()
             };
 
             foreach (var div in bookContent.GetByFilter("div", "book-links2")) {
                 var name = div.InnerText.Trim();
-                var value = div.GetByFilter("a")?.FirstOrDefault()?.InnerText;
+                var value = div.GetByFilterFirst("a")?.InnerText;
                 
                 if (name.Contains("Издательство")) {
                     book.Publisher = value;
@@ -92,12 +90,12 @@ namespace ZnaniumParser.Logic {
             }
             
             foreach (var div in bookContent.GetByFilter("div", "book-chars__inner")) {
-                var name = div.GetByFilter("div", "book-chars__name").FirstOrDefault()?.InnerText.ToLower().Trim();
+                var name = div.GetByFilterFirst("div", "book-chars__name")?.InnerText.ToLower().Trim();
                 if (string.IsNullOrEmpty(name)) {
                     continue;
                 }
                 
-                var value = div.GetByFilter("div", "book-chars__view").FirstOrDefault()?.InnerText.Trim();
+                var value = div.GetByFilterFirst("div", "book-chars__view")?.InnerText.Trim();
 
                 if (name == "isbn") {
                     book.ISBN = value;
@@ -131,7 +129,7 @@ namespace ZnaniumParser.Logic {
         }
 
         private static async Task<SitemapFile> GetLinksSitemaps(HttpClient client, Uri sitemap) {
-            var rootSitemap = await HttpClientHelper.GetStringAsync(client, sitemap);
+            var rootSitemap = await client.GetStringWithTriesAsync(sitemap);
 
             using var reader = new StringReader(rootSitemap);
             return await new XmlSitemapParser().ParseSitemapAsync(reader);

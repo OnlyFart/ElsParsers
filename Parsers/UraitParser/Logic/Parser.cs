@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
-using Core.Utils.Helpers;
 using HtmlAgilityPack;
 using NLog;
 using TurnerSoftware.SitemapTools.Parser;
@@ -28,7 +27,7 @@ namespace UraitParser.Logic {
         }
         
         public async Task Parse() {
-            var client = HttpClientHelper.GetClient(_config);
+            var client = HttpClientExtensions.GetClient(_config);
 
             var processed = _provider.ReadProjection(t => t.Id).ContinueWith(t => new HashSet<long>(t.Result));
             
@@ -58,7 +57,7 @@ namespace UraitParser.Logic {
         /// <param name="uri"></param>
         /// <returns></returns>
         private static async Task<Book> GetBook(HttpClient client, Uri uri) {
-            var content = await HttpClientHelper.GetStringAsync(client, uri);
+            var content = await client.GetStringWithTriesAsync(uri);
             if (string.IsNullOrEmpty(content)) {
                 return default;
             }
@@ -68,14 +67,14 @@ namespace UraitParser.Logic {
 
             var book = new Book {
                 Id = int.Parse(uri.Segments.Last().Split("-").Last()), 
-                Name = doc.DocumentNode.GetByFilter("h1", "book_title").FirstOrDefault()?.InnerText.Trim(), 
-                Authors = doc.DocumentNode.GetByFilter("ul", "creation-info__authors")?.FirstOrDefault()?.FirstChild?.InnerText?.Trim(), 
-                Year = doc.DocumentNode.GetByFilter("div", "creation-info__year")?.FirstOrDefault()?.InnerText?.Trim(),
+                Name = doc.DocumentNode.GetByFilterFirst("h1", "book_title")?.InnerText.Trim(), 
+                Authors = doc.DocumentNode.GetByFilterFirst("ul", "creation-info__authors")?.FirstChild?.InnerText?.Trim(), 
+                Year = doc.DocumentNode.GetByFilterFirst("div", "creation-info__year")?.InnerText?.Trim(),
             };
 
 
             foreach (var div in doc.DocumentNode.GetByFilter("div", "book-about-produce__item")) {
-                var name = div.GetByFilter("span", "book-about-produce__title").FirstOrDefault()?.InnerText.ToLower().Trim();
+                var name = div.GetByFilterFirst("span", "book-about-produce__title")?.InnerText.ToLower().Trim();
                 if (string.IsNullOrEmpty(name)) {
                     continue;
                 }
@@ -90,7 +89,7 @@ namespace UraitParser.Logic {
             }
             
             foreach (var div in doc.DocumentNode.GetByFilter("div", "book-about-info__item")) {
-                var name = div.GetByFilter("div", "book-about-info__title").FirstOrDefault()?.InnerText.ToLower().Trim();
+                var name = div.GetByFilterFirst("div", "book-about-info__title")?.InnerText.ToLower().Trim();
                 var value = string.Join(", ", div.GetByFilter("div", "book-about-info__info").Select(t => t.InnerText.Trim()));
                 
                 if (!string.IsNullOrEmpty(name) && name.Contains("библиографическое описание")) {
@@ -118,7 +117,7 @@ namespace UraitParser.Logic {
         }
 
         private static async Task<IEnumerable<Uri>> GetLinksSitemaps(HttpClient client, Uri sitemap) {
-            var rootSitemap = await HttpClientHelper.GetStringAsync(client, sitemap);
+            var rootSitemap = await client.GetStringWithTriesAsync(sitemap);
 
             using var reader = new StringReader(rootSitemap);
             var sm = await new XmlSitemapParser().ParseSitemapAsync(reader);

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
-using Core.Utils.Helpers;
 using HtmlAgilityPack;
 using IprBookShopParser.Configs;
 using IprBookShopParser.Types;
@@ -30,7 +29,7 @@ namespace IprBookShopParser.Logic {
         private const int BOOKS_PER_PAGE = 20;
 
         public async Task Parse() {
-            var client = HttpClientHelper.GetClient(_config);
+            var client = HttpClientExtensions.GetClient(_config);
             
             var processed = await _provider.ReadProjection(book => book.Id).ContinueWith(t => new HashSet<long>(t.Result));
 
@@ -71,20 +70,20 @@ namespace IprBookShopParser.Logic {
         private static async Task<Book> GetBook(HttpClient client, long id) {
             var url = new Uri($"http://www.iprbookshop.ru/{id}.html");
 
-            var content = await HttpClientHelper.GetStringAsync(client, url);
+            var content = await client.GetStringWithTriesAsync(url);
 
             var doc = new HtmlDocument();
             doc.LoadHtml(content);
 
-            var bookInfoBlock = doc.DocumentNode.GetByFilter("div", "book-information").FirstOrDefault();
+            var bookInfoBlock = doc.DocumentNode.GetByFilterFirst("div", "book-information");
 
             var book = new Book {
                 Id = id,
-                Name = Book.Normalize(bookInfoBlock?.GetByFilter("h4", "header-orange")?.FirstOrDefault()?.InnerText),
-                Bib = Book.Normalize(bookInfoBlock?.GetByFilter("h3", "header-green")?.FirstOrDefault()?.NextSibling.NextSibling.InnerText)
+                Name = Book.Normalize(bookInfoBlock?.GetByFilterFirst("h4", "header-orange")?.InnerText),
+                Bib = Book.Normalize(bookInfoBlock?.GetByFilterFirst("h3", "header-green")?.NextSibling.NextSibling.InnerText)
             };
 
-            var bookDescriptionBlock = bookInfoBlock.GetByFilter("div", "col-sm-10").FirstOrDefault();
+            var bookDescriptionBlock = bookInfoBlock.GetByFilterFirst("div", "col-sm-10");
             foreach (var row in bookDescriptionBlock.GetByFilter("div", "row")) {
                 var strong = row.Descendants().FirstOrDefault(t => t.Name == "strong");
                 if (strong == default || string.IsNullOrWhiteSpace(strong.InnerText)) {
@@ -117,7 +116,7 @@ namespace IprBookShopParser.Logic {
         }
 
         private static string GetDescription(HtmlNode node) {
-            return node.GetByFilter("div", "col-sm-9").FirstOrDefault()?.InnerText.Trim();
+            return node.GetByFilterFirst("div", "col-sm-9")?.InnerText.Trim();
         }
 
         /// <summary>
@@ -146,7 +145,7 @@ namespace IprBookShopParser.Logic {
                 new KeyValuePair<string, string>("available", "1")
             };
 
-            var content = await HttpClientHelper.PostAsync(client, _apiUrl, new FormUrlEncodedContent(values));
+            var content = await client.PostWithTriesAsync(_apiUrl, new FormUrlEncodedContent(values));
             return string.IsNullOrEmpty(content) ? new SearchResponseData() : JsonConvert.DeserializeObject<SearchResponseData>(content);
         }
     }

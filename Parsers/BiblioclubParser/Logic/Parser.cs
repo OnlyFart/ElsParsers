@@ -9,7 +9,6 @@ using BiblioclubParser.Types;
 using BiblioclubParser.Types.API;
 using Core.Extensions;
 using Core.Providers.Interfaces;
-using Core.Utils.Helpers;
 using Newtonsoft.Json;
 using NLog;
 
@@ -28,7 +27,7 @@ namespace BiblioclubParser.Logic {
         }
 
         public async Task Parse() {
-            var client = HttpClientHelper.GetClient(_config);
+            var client = HttpClientExtensions.GetClient(_config);
 
             var processed = _provider.ReadProjection(book => book.Id).ContinueWith(t => new HashSet<long>(t.Result));
 
@@ -71,7 +70,7 @@ namespace BiblioclubParser.Logic {
             pairs.AddRange(ids.Select(id => new KeyValuePair<string, string>("books_ids[]", id.ToString())));
 
             var dataContent = new FormUrlEncodedContent(pairs.ToArray());
-            var content = await HttpClientHelper.PostAsync(client, url, dataContent);
+            var content = await client.PostWithTriesAsync(url, dataContent);
             return string.IsNullOrEmpty(content) ? new ShortInfo[]{} : JsonConvert.DeserializeObject<IEnumerable<ShortInfo>>(content);
         }
         
@@ -81,7 +80,7 @@ namespace BiblioclubParser.Logic {
                 return Enumerable.Empty<Book>();
             }
             
-            var resp = await HttpClientHelper.GetStringAsync(client, new Uri("https://biblioclub.ru/index.php?action=blocks&list=" + string.Join(",", shortInfos.Select(s => "biblio:" + s.Id))));
+            var resp = await client.GetStringWithTriesAsync(new Uri("https://biblioclub.ru/index.php?action=blocks&list=" + string.Join(",", shortInfos.Select(s => "biblio:" + s.Id))));
             if (string.IsNullOrEmpty(resp)) {
                 return Enumerable.Empty<Book>();
             }
