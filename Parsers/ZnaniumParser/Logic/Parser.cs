@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -80,12 +81,12 @@ namespace ZnaniumParser.Logic {
 
             foreach (var div in bookContent.GetByFilter("div", "book-links2")) {
                 var name = div.InnerText.Trim();
-                var value = div.GetByFilterFirst("a")?.InnerText;
+                var value = div.GetByFilter("a");
                 
                 if (name.Contains("Издательство")) {
-                    book.Publisher = value;
+                    book.Publisher = value.FirstOrDefault()?.InnerText;
                 } else if (name.Contains("Авторы")) {
-                    book.Authors = value;
+                    book.Authors = string.Join(", ", value.Where(t => !string.IsNullOrEmpty(t.InnerText)).Select(t => t?.InnerText?.Trim()));
                 }
             }
             
