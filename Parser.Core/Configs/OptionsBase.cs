@@ -1,6 +1,6 @@
 using CommandLine;
 
-namespace Core.Configs {
+namespace Parser.Core.Configs {
     public abstract class OptionsBase {
         [Option("th", Required = false, HelpText = "Максимальное число потоков для обращения к сервису", Default = 1)]
         public int MaxThread { get; set; }
@@ -14,7 +14,10 @@ namespace Core.Configs {
         [Option("cs", Required = true, HelpText = "Строка подключения в MongoDb")]
         public string ConnectionString { get; set; }
         
-        [Option("db", Required = false, HelpText = "Название базы данных", Default = "ESL")]
+        [Option("db", Required = false, HelpText = "Название базы данных", Default = "ELS")]
         public string DatabaseName { get; set; }
+        
+        [Option("cn", Required = false, HelpText = "Название коллекции", Default = "Books")]
+        public string CollectionName { get; set; }
     }
 }

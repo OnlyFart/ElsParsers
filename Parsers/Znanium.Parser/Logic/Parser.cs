@@ -6,31 +6,29 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Web;
-using Parser.Core;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using HtmlAgilityPack;
-using NLog;
+using Parser.Core.Extensions;
+using Parser.Core.Logic;
+using Parser.Core.Types;
 using TurnerSoftware.SitemapTools;
 using TurnerSoftware.SitemapTools.Parser;
 using Znanium.Parser.Configs;
 
 namespace Znanium.Parser.Logic {
-    public class Parser {
-        private static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
-        
+    public class Parser : ParserBase {
         private readonly IParserConfig _config;
-        private readonly IRepository<Book> _provider;
+        protected override string ElsName => "Znarium";
 
-        public Parser(IParserConfig config, IRepository<Book> provider) {
+        public Parser(IParserConfig config, IRepository<Book> provider) : base(provider) {
             _config = config;
-            _provider = provider;
         }
         
         public async Task Parse() {
             var client = HttpClientExtensions.GetClient(_config);
-            
-            var processed = _provider.ReadProjection(t => t.Id).ContinueWith(t => new HashSet<long>(t.Result));
+
+            var processed = GetProcessed();
 
             var getPageBlock = new TransformBlock<Uri, SitemapFile>(async url => await GetLinksSitemaps(client, url));
             getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
@@ -61,7 +59,7 @@ namespace Znanium.Parser.Logic {
         /// <param name="client"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        private static async Task<Book> GetBook(HttpClient client, long id) {
+        private async Task<Book> GetBook(HttpClient client, long id) {
             var content = await client.GetStringWithTriesAsync(new Uri($"https://znanium.com/catalog/document?id={id}"));
             if (string.IsNullOrEmpty(content)) {
                 return default;
@@ -73,8 +71,7 @@ namespace Znanium.Parser.Logic {
             var bookContent = doc.DocumentNode.GetByFilterFirst("div", "book-content");
             var bookInfoBlock = bookContent.GetByFilterFirst("div", "desktop-book-header");
 
-            var book = new Book {
-                Id = id,
+            var book = new Book(id.ToString(), ElsName) {
                 Name = bookInfoBlock.GetByFilterFirst("h1")?.InnerText.Trim(),
                 Bib = doc.GetElementbyId("doc-biblio-card").InnerText.Trim()
             };
@@ -110,12 +107,12 @@ namespace Znanium.Parser.Logic {
             return book;
         }
 
-        private static IEnumerable<long> Filter(SitemapFile sitemap, ICollection<long> processed) {
+        private static IEnumerable<long> Filter(SitemapFile sitemap, ICollection<string> processed) {
             foreach (var uri in sitemap.Urls) {
                 var pars = HttpUtility.ParseQueryString(uri.Location.Query);
 
                 var idStr = pars.Get("id");
-                if (long.TryParse(idStr, out var id) && !processed.Contains(id)) {
+                if (long.TryParse(idStr, out var id) && !processed.Contains(id.ToString())) {
                     yield return id;
                 }
             }

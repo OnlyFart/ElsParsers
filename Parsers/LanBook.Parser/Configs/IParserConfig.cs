@@ -1,4 +1,4 @@
-using Core.Configs;
+using Parser.Core.Configs;
 
 namespace LanBook.Parser.Configs {
     public interface IParserConfig : IParserConfigBase {

@@ -1,9 +1,9 @@
 using BiblioClub.Parser.Configs;
-using Parser.Core;
 using Core.Configs;
 using Core.IoC;
 using Core.Providers.Implementations;
 using Core.Providers.Interfaces;
+using Parser.Core.Types;
 
 namespace BiblioClub.Parser.IoC {
     public class Ninject : CoreNinjectModule {

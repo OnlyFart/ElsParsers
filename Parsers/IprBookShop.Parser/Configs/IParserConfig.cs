@@ -1,4 +1,4 @@
-using Core.Configs;
+using Parser.Core.Configs;
 
 namespace IprBookShop.Parser.Configs {
     public interface IParserConfig : IParserConfigBase {

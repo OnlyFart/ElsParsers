@@ -55,7 +55,7 @@ namespace Sandbox {
             
             var mongoProvider = new MongoRepository<School>(new MongoConfig());
 
-            var processed = await mongoProvider.ReadProjection(t => t.Link).ContinueWith(t => new HashSet<string>(t.Result));
+            var processed = await mongoProvider.Read(t => t.Link).ContinueWith(t => new HashSet<string>(t.Result));
 
             var toProcess = new HashSet<Uri>();
             foreach (var url in new[]{"https://schoolme.ru/sitemap1.xml", "https://schoolme.ru/sitemap2.xml", "https://schoolme.ru/sitemap3.xml"}) {

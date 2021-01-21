@@ -2,7 +2,6 @@
 using CommandLine;
 using IprBookShop.Parser.Configs;
 using Ninject;
-using Parser = IprBookShop.Parser.Logic.Parser;
 
 namespace IprBookShop.Parser {
     class Program {

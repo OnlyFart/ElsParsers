@@ -9,27 +9,26 @@ using BiblioClub.Parser.Types.API;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Newtonsoft.Json;
-using NLog;
-using Parser.Core;
+using Parser.Core.Extensions;
+using Parser.Core.Logic;
+using Parser.Core.Types;
 
 namespace BiblioClub.Parser.Logic {
-    public class Parser {
-        private static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
+    public class Parser : ParserBase {
+        protected override string ElsName => "BiblioClub";
         
         private readonly IParserConfig _config;
-        private readonly IRepository<Book> _provider;
 
         private static readonly Uri _apiUrl = new Uri("https://biblioclub.ru/services/service.php?page=books&m=GetShortInfo_S&parse&out=json");
 
-        public Parser(IParserConfig config, IRepository<global::Parser.Core.Book> provider) {
+        public Parser(IParserConfig config, IRepository<Book> provider) : base(provider) {
             _config = config;
-            _provider = provider;
         }
 
         public async Task Parse() {
             var client = HttpClientExtensions.GetClient(_config);
 
-            var processed = _provider.ReadProjection(book => book.Id).ContinueWith(t => new HashSet<long>(t.Result));
+            var processed = GetProcessed();
 
             var batchBlock1 = new BatchBlock<long>(1000);
             var getPageBlock = new TransformBlock<long[], IEnumerable<ShortInfo>>(async ids => await GetShortInfo(client, _apiUrl, ids));
@@ -58,8 +57,8 @@ namespace BiblioClub.Parser.Logic {
             await DataflowExtension.WaitBlocks(batchBlock1, getPageBlock, filterBlock, batchBlock2, getBibBlock, batchBlock3, saveBookBlock);
         }
 
-        private static IEnumerable<ShortInfo> Filter(IEnumerable<ShortInfo> shortInfos, ICollection<long> processed) {
-            return shortInfos?.Where(shortInfo => !processed.Contains(shortInfo.Id));
+        private static IEnumerable<ShortInfo> Filter(IEnumerable<ShortInfo> shortInfos, ICollection<string> processed) {
+            return shortInfos?.Where(shortInfo => !processed.Contains(shortInfo.Id.ToString()));
         }
 
         private static async Task<IEnumerable<ShortInfo>> GetShortInfo(HttpClient client, Uri url, IEnumerable<long> ids) {
@@ -75,7 +74,7 @@ namespace BiblioClub.Parser.Logic {
         }
         
 
-        private static async Task<IEnumerable<Book>> GetBib(HttpClient client, ShortInfo[] shortInfos) {
+        private async Task<IEnumerable<Book>> GetBib(HttpClient client, ShortInfo[] shortInfos) {
             if (shortInfos == default) {
                 return Enumerable.Empty<Book>();
             }
@@ -86,8 +85,7 @@ namespace BiblioClub.Parser.Logic {
             }
             
             var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(resp);
-            return shortInfos.Select(shortInfo => new Book {
-                Id = shortInfo.Id,
+            return shortInfos.Select(shortInfo => new Book(shortInfo.Id.ToString(), ElsName) {
                 Authors = shortInfo.Author,
                 Bib = dict["biblio:" + shortInfo.Id],
                 ISBN = shortInfo.ISBN,

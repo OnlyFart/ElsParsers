@@ -22,25 +22,28 @@ namespace Core.Providers.Implementations {
                 .GetCollection<T>(_config.CollectionName);
         }
 
-        public async Task<IEnumerable<TValue>> ReadProjection<TValue>(Expression<Func<T, TValue>> projection) {
+        public async Task<IEnumerable<TValue>> Read<TValue>(FilterDefinition<T> filter, Expression<Func<T, TValue>> projection) {
             _logger.Info($"Выполняю загрузку из {_config.DatabaseName}/{_config.CollectionName}");
             
-            var listAsync = await _collection.Find(Builders<T>.Filter.Empty).Project(projection).ToListAsync();
+            var listAsync = await _collection.Find(filter).Project(projection).ToListAsync();
             
             _logger.Info($"Загружено {listAsync.Count} записей");
             
             return listAsync;
         }
 
-        public Task CreateMany(IEnumerable<T> items) {
+        public async Task CreateMany(IEnumerable<T> items) {
             var toSave = items.Where(t => t != null).ToList();
 
             if (toSave.Count > 0) {
                 _logger.Info($"Сохраняем {toSave.Count} объектов");
-                return _collection.InsertManyAsync(toSave);
+                
+                try {
+                    await _collection.InsertManyAsync(toSave);
+                } catch (Exception ex) {
+                    _logger.Error(ex);
+                }
             }
-            
-            return Task.CompletedTask;
         }
     }
 }

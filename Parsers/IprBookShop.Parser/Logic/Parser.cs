@@ -5,25 +5,24 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using Parser.Core;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using HtmlAgilityPack;
 using IprBookShop.Parser.Configs;
 using IprBookShop.Parser.Types;
 using Newtonsoft.Json;
-using NLog;
+using Parser.Core.Extensions;
+using Parser.Core.Logic;
+using Parser.Core.Types;
 
 namespace IprBookShop.Parser.Logic {
-    public class Parser {
-        private static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
-        
+    public class Parser : ParserBase {
         private readonly IParserConfig _config;
-        private readonly IRepository<Book> _provider;
 
-        public Parser(IParserConfig config, IRepository<Book> provider) {
+        protected override string ElsName => "IprBookShop";
+
+        public Parser(IParserConfig config, IRepository<Book> provider) : base(provider) {
             _config = config;
-            _provider = provider;
         }
 
         private static readonly Uri _apiUrl = new Uri("http://www.iprbookshop.ru/78575");
@@ -33,12 +32,12 @@ namespace IprBookShop.Parser.Logic {
         public async Task Parse() {
             var client = HttpClientExtensions.GetClient(_config);
             
-            var processed = await _provider.ReadProjection(book => book.Id).ContinueWith(t => new HashSet<long>(t.Result));
+            var processed = await GetProcessed();
 
             var getPageBlock = new TransformBlock<int, SearchResponseData>(async page => await GetSearchResponse(client, page));
             getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
             
-            var filterBlock = new TransformManyBlock<SearchResponseData, SearchData>(page => page.Data.Where(t => !processed.Contains(t.Id)));
+            var filterBlock = new TransformManyBlock<SearchResponseData, SearchData>(page => page.Data.Where(t => !processed.Contains(t.Id.ToString())));
             var getBookBlock = new TransformBlock<SearchData, Book>(async book => await GetBook(client, book.Id), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
@@ -73,7 +72,7 @@ namespace IprBookShop.Parser.Logic {
         /// <param name="client"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        private static async Task<Book> GetBook(HttpClient client, long id) {
+        private async Task<Book> GetBook(HttpClient client, long id) {
             var url = new Uri($"http://www.iprbookshop.ru/{id}.html");
 
             var content = await client.GetStringWithTriesAsync(url);
@@ -83,8 +82,7 @@ namespace IprBookShop.Parser.Logic {
 
             var bookInfoBlock = doc.DocumentNode.GetByFilterFirst("div", "book-information");
 
-            var book = new Book {
-                Id = id,
+            var book = new Book(id.ToString(), ElsName) {
                 Name = Normalize(bookInfoBlock?.GetByFilterFirst("h4", "header-orange")?.InnerText),
                 Bib = Normalize(bookInfoBlock?.GetByFilterFirst("h3", "header-green")?.NextSibling.NextSibling.InnerText)
             };

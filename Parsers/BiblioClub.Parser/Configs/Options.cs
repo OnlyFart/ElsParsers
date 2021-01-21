@@ -1,5 +1,6 @@
 using CommandLine;
 using Core.Configs;
+using Parser.Core.Configs;
 
 namespace BiblioClub.Parser.Configs {
     public class Options : OptionsBase, IParserConfig, IMongoConfig {
@@ -8,8 +9,5 @@ namespace BiblioClub.Parser.Configs {
         
         [Option("ei", Required = false, HelpText = "Конечный индекс для обхода", Default = 1000000)]
         public int EndIndex { get; set; }
-        
-        [Option("cn", Required = false, HelpText = "Название коллекции", Default = "BiblioClub")]
-        public string CollectionName { get; set; }
     }
 }

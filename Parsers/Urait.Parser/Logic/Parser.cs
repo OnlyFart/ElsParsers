@@ -6,30 +6,29 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using Parser.Core;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using HtmlAgilityPack;
-using NLog;
+using Parser.Core.Extensions;
+using Parser.Core.Logic;
+using Parser.Core.Types;
 using TurnerSoftware.SitemapTools.Parser;
 using Urait.Parser.Configs;
 
 namespace Urait.Parser.Logic {
-    public class Parser {
-        private static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
-        
+    public class Parser : ParserBase {
         private readonly IParserConfig _config;
-        private readonly IRepository<Book> _provider;
 
-        public Parser(IParserConfig config, IRepository<Book> provider) {
+        protected override string ElsName => "Urait";
+        
+        public Parser(IParserConfig config, IRepository<Book> provider) : base(provider) {
             _config = config;
-            _provider = provider;
         }
         
         public async Task Parse() {
             var client = HttpClientExtensions.GetClient(_config);
 
-            var processed = _provider.ReadProjection(t => t.Id).ContinueWith(t => new HashSet<long>(t.Result));
+            var processed = GetProcessed();
             
             var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(async uris => Filter(uris, await processed));
             filterBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
@@ -56,7 +55,7 @@ namespace Urait.Parser.Logic {
         /// <param name="client"></param>
         /// <param name="uri"></param>
         /// <returns></returns>
-        private static async Task<Book> GetBook(HttpClient client, Uri uri) {
+        private async Task<Book> GetBook(HttpClient client, Uri uri) {
             var content = await client.GetStringWithTriesAsync(uri);
             if (string.IsNullOrEmpty(content)) {
                 return default;
@@ -65,8 +64,7 @@ namespace Urait.Parser.Logic {
             var doc = new HtmlDocument();
             doc.LoadHtml(content);
 
-            var book = new Book {
-                Id = int.Parse(uri.Segments.Last().Split("-").Last()), 
+            var book = new Book(uri.Segments.Last().Split("-").Last(), ElsName) {
                 Name = doc.DocumentNode.GetByFilterFirst("h1", "book_title")?.InnerText.Trim(), 
                 Authors = doc.DocumentNode.GetByFilterFirst("ul", "creation-info__authors")?.FirstChild?.InnerText?.Trim(), 
                 Year = doc.DocumentNode.GetByFilterFirst("div", "creation-info__year")?.InnerText?.Trim(),
@@ -107,10 +105,10 @@ namespace Urait.Parser.Logic {
             return book;
         }
 
-        private static IEnumerable<Uri> Filter(IEnumerable<Uri> uris, ICollection<long> processed) {
+        private static IEnumerable<Uri> Filter(IEnumerable<Uri> uris, ICollection<string> processed) {
             foreach (var uri in uris.Where(uri => uri.LocalPath.StartsWith("/book/"))) {
                 var idStr = uri.Segments.Last().Split("-").Last();
-                if (long.TryParse(idStr, out var id) && !processed.Contains(id)) {
+                if (long.TryParse(idStr, out var id) && !processed.Contains(id.ToString())) {
                     yield return uri;
                 }
             }

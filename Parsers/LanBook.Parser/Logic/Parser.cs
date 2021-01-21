@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using Parser.Core;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using LanBook.Parser.Configs;
@@ -12,18 +11,18 @@ using LanBook.Parser.Types.API;
 using LanBook.Parser.Types.API.BooksExtend;
 using LanBook.Parser.Types.API.BooksShort;
 using Newtonsoft.Json;
-using NLog;
+using Parser.Core.Extensions;
+using Parser.Core.Logic;
+using Parser.Core.Types;
 
 namespace LanBook.Parser.Logic {
-    public class Parser {
-        private static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
-        
+    public class Parser : ParserBase {
         private readonly IParserConfig _config;
-        private readonly IRepository<Book> _provider;
 
-        public Parser(IParserConfig config, IRepository<Book> provider) {
+        protected override string ElsName => "LanBook";
+
+        public Parser(IParserConfig config, IRepository<Book> provider) : base(provider) {
             _config = config;
-            _provider = provider;
         }
         
         private const int BOOKS_PER_PAGE = 1000;
@@ -32,8 +31,8 @@ namespace LanBook.Parser.Logic {
 
         public async Task Parse() {
             var client = HttpClientExtensions.GetClient(_config);
-            
-            var processed = _provider.ReadProjection(book => book.Id).ContinueWith(t => new HashSet<long>(t.Result));
+
+            var processed = GetProcessed();
 
             var getPageBlock = new TransformBlock<int, ApiResponse<BooksShortBody>>(async page => await GetSearchResponse(client, page));
             getPageBlock.CompleteMessage(_logger, "Обход всего каталога успешно завершен. Ждем получения всех книг.");
@@ -63,13 +62,13 @@ namespace LanBook.Parser.Logic {
             await DataflowExtension.WaitBlocks(getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock);
         }
 
-        private static IEnumerable<BookShort> Filter(ApiResponse<BooksShortBody> response, IEnumerable<long> processed) {
+        private static IEnumerable<BookShort> Filter(ApiResponse<BooksShortBody> response, IEnumerable<string> processed) {
             if (response == default) {
                 return Enumerable.Empty<BookShort>();
             }
             
-            var books = response.Body.Items.Where(t => !processed.Contains(t.Id));
-            var extra = response.Body.Extra.Where(t => !processed.Contains(t.Id));
+            var books = response.Body.Items.Where(t => !processed.Contains(t.Id.ToString()));
+            var extra = response.Body.Extra.Where(t => !processed.Contains(t.Id.ToString()));
             return books.Union(extra);
         }
 
@@ -79,15 +78,14 @@ namespace LanBook.Parser.Logic {
         /// <param name="client"></param>
         /// <param name="bookShort"></param>
         /// <returns></returns>
-        private static async Task<Book> GetBook(HttpClient client, BookShort bookShort) {
+        private async Task<Book> GetBook(HttpClient client, BookShort bookShort) {
             if (bookShort == default) {
                 return default;
             }
             
             var content = await client.GetStringWithTriesAsync(new Uri($"https://e.lanbook.com/api/v2/catalog/book/{bookShort.Id}"));
             var bookExtend = JsonConvert.DeserializeObject<ApiResponse<BookExtend>>(content);
-            return string.IsNullOrEmpty(content) ? default : new Book {
-                Id = bookShort.Id,
+            return string.IsNullOrEmpty(content) ? default : new Book(bookShort.Id.ToString(), ElsName) {
                 Authors = bookExtend.Body.Authors,
                 Bib = bookExtend.Body.BiblioRecord,
                 ISBN = bookExtend.Body.ISBN,

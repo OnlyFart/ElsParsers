@@ -2,10 +2,10 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Core.Configs;
 using NLog;
+using Parser.Core.Configs;
 
-namespace Core.Extensions {
+namespace Parser.Core.Extensions {
     public static class HttpClientExtensions {
         private const int MAX_TRY_COUNT = 3;
         

@@ -1,9 +1,9 @@
-using Parser.Core;
 using Core.Configs;
 using Core.IoC;
 using Core.Providers.Implementations;
 using Core.Providers.Interfaces;
 using LanBook.Parser.Configs;
+using Parser.Core.Types;
 
 namespace LanBook.Parser.IoC {
     public class Ninject : CoreNinjectModule {

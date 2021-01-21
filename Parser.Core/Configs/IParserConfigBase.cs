@@ -1,4 +1,4 @@
-namespace Core.Configs {
+namespace Parser.Core.Configs {
     public interface IParserConfigBase {
         string Proxy { get; set; }
         

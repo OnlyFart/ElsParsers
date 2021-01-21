@@ -1,9 +1,24 @@
-﻿namespace Parser.Core {
+﻿namespace Parser.Core.Types {
     public class Book {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="externalId">Идентификатор книги в библиотеке</param>
+        /// <param name="elsName">Название библиотеки</param>
+        public Book(string externalId, string elsName) {
+            ExternalId = externalId;
+            ElsName = elsName;
+        }
+
         /// <summary>
         /// Идентификатор книги
         /// </summary>
-        public long Id;
+        public string ExternalId;
+
+        /// <summary>
+        /// Название библиотеки
+        /// </summary>
+        public string ElsName;
         
         /// <summary>
         /// Авторы кники
