@@ -23,12 +23,12 @@ uraitparser --help
 ```
 
 ## Дополнительная информация 
-В данном репозитории содержатся следующие парсеры:
-* [IPR Books](http://www.iprbookshop.ru/) -> [ссылка](https://github.com/OnlyFart/ElsParsers/tree/master/Parsers/IprBookShopParser)
-* [Urait](https://urait.ru/) -> [ссылка](https://github.com/OnlyFart/ElsParsers/tree/master/Parsers/UraitParser)
-* [Лань](https://lanbook.com/) -> [ссылка](https://github.com/OnlyFart/ElsParsers/tree/master/Parsers/LanBookParser)
-* [Znarium](https://znanium.com/) -> [ссылка](https://github.com/OnlyFart/ElsParsers/tree/master/Parsers/ZnaniumParser)
-* [Biblioclub](https://biblioclub.ru/) -> [ссылка](https://github.com/OnlyFart/ElsParsers/tree/master/Parsers/BiblioclubParser)
+В данном репозитории содержатся следующие парсеры следующих библиотечных систем:
+* [IPR Books](http://www.iprbookshop.ru/)
+* [Urait](https://urait.ru/)
+* [Лань](https://lanbook.com/)
+* [Znarium](https://znanium.com/)
+* [Biblioclub](https://biblioclub.ru/)
 
 Для работы каждого из парсеров необходима база данных [MongoDb](https://www.mongodb.com/), где каждым из парсером будет создана своя коллекция с книгами.
 При повторном запуске парсера будут дособраны книги, которые отсутствуют на текущий момент в базе
