@@ -3,6 +3,7 @@ using Core.IoC;
 using Core.Providers.Implementations;
 using Core.Providers.Interfaces;
 using LanBook.Parser.Configs;
+using Parser.Core.Configs;
 using Parser.Core.Types;
 
 namespace LanBook.Parser.IoC {
@@ -17,7 +18,7 @@ namespace LanBook.Parser.IoC {
             base.Load();
 
             Bind<IMongoConfig>().ToConstant((IMongoConfig) _options);
-            Bind<IParserConfig>().ToConstant((IParserConfig) _options);
+            Bind<IParserConfigBase>().ToConstant((IParserConfig) _options);
             Bind<IRepository<Book>>().To<MongoRepository<Book>>();
         }
     }

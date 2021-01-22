@@ -9,7 +9,7 @@ namespace IprBookShop.Parser {
             await CommandLine.Parser.Default.ParseArguments<Options>(args)
                 .WithParsedAsync(async options => {
                     var kernel = new StandardKernel(new IoC.Ninject(options));
-                    await kernel.Get<Logic.Parser>().Parse();
+                    await kernel.Get<Logic.Parser>().Run();
                 });
         }
     }

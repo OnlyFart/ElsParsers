@@ -11,33 +11,27 @@ using LanBook.Parser.Types.API;
 using LanBook.Parser.Types.API.BooksExtend;
 using LanBook.Parser.Types.API.BooksShort;
 using Newtonsoft.Json;
+using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
 using Parser.Core.Types;
 
 namespace LanBook.Parser.Logic {
     public class Parser : ParserBase {
-        private readonly IParserConfig _config;
-
         protected override string ElsName => "LanBook";
 
-        public Parser(IParserConfig config, IRepository<Book> provider) : base(provider) {
-            _config = config;
+        public Parser(IParserConfigBase config, IRepository<Book> provider) : base(config, provider) {
         }
         
         private const int BOOKS_PER_PAGE = 1000;
 
         private static readonly string _allBooksUrlPattern = "https://e.lanbook.com/api/v2/catalog/books?category=0&limit=" + BOOKS_PER_PAGE  + "&page={0}";
 
-        public async Task Parse() {
-            var client = HttpClientExtensions.GetClient(_config);
-
-            var processed = GetProcessed();
-
+        protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var getPageBlock = new TransformBlock<int, ApiResponse<BooksShortBody>>(async page => await GetSearchResponse(client, page));
             getPageBlock.CompleteMessage(_logger, "Обход всего каталога успешно завершен. Ждем получения всех книг.");
             
-            var filterBlock = new TransformManyBlock<ApiResponse<BooksShortBody>, BookShort>(async reponse => Filter(reponse, await processed));
+            var filterBlock = new TransformManyBlock<ApiResponse<BooksShortBody>, BookShort>(apiResponse => Filter(apiResponse, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
             var getBookBlock = new TransformBlock<BookShort, Book>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
@@ -55,20 +49,20 @@ namespace LanBook.Parser.Logic {
             
             _logger.Info($"Всего книг в магазине {response.Body.Total}. Страниц для обхода {pagesCount}");
             
-            for (var i = _config.StartPage; i <= pagesCount; i++) {
+            for (var i = ((IParserConfig)_config).StartPage; i <= pagesCount; i++) {
                 await getPageBlock.SendAsync(i);
             }
 
-            await DataflowExtension.WaitBlocks(getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock);
+            return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
         }
 
-        private static IEnumerable<BookShort> Filter(ApiResponse<BooksShortBody> response, IEnumerable<string> processed) {
+        private static IEnumerable<BookShort> Filter(ApiResponse<BooksShortBody> response, ISet<string> processed) {
             if (response == default) {
                 return Enumerable.Empty<BookShort>();
             }
             
-            var books = response.Body.Items.Where(t => !processed.Contains(t.Id.ToString()));
-            var extra = response.Body.Extra.Where(t => !processed.Contains(t.Id.ToString()));
+            var books = response.Body.Items.Where(t => processed.Add(t.Id.ToString()));
+            var extra = response.Body.Extra.Where(t => processed.Add(t.Id.ToString()));
             return books.Union(extra);
         }
 

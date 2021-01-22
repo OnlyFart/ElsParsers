@@ -9,28 +9,22 @@ using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using HtmlAgilityPack;
+using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
 using Parser.Core.Types;
 using TurnerSoftware.SitemapTools.Parser;
-using Urait.Parser.Configs;
 
 namespace Urait.Parser.Logic {
     public class Parser : ParserBase {
-        private readonly IParserConfig _config;
-
         protected override string ElsName => "Urait";
         
-        public Parser(IParserConfig config, IRepository<Book> provider) : base(provider) {
-            _config = config;
+        public Parser(IParserConfigBase config, IRepository<Book> provider) : base(config, provider) {
+
         }
         
-        public async Task Parse() {
-            var client = HttpClientExtensions.GetClient(_config);
-
-            var processed = GetProcessed();
-            
-            var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(async uris => Filter(uris, await processed));
+        protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
+            var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(uris => Filter(uris, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
             filterBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
             
             var getBookBlock = new TransformBlock<Uri, Book>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
@@ -46,7 +40,7 @@ namespace Urait.Parser.Logic {
             
             await filterBlock.SendAsync(await GetLinksSitemaps(client, new Uri("https://urait.ru/sitemap.xml")));
             
-            await DataflowExtension.WaitBlocks(filterBlock, getBookBlock, batchBlock, saveBookBlock);
+            return new IDataflowBlock[] {filterBlock, getBookBlock, batchBlock, saveBookBlock};
         }
 
         /// <summary>
@@ -105,10 +99,10 @@ namespace Urait.Parser.Logic {
             return book;
         }
 
-        private static IEnumerable<Uri> Filter(IEnumerable<Uri> uris, ICollection<string> processed) {
+        private static IEnumerable<Uri> Filter(IEnumerable<Uri> uris, ISet<string> processed) {
             foreach (var uri in uris.Where(uri => uri.LocalPath.StartsWith("/book/"))) {
                 var idStr = uri.Segments.Last().Split("-").Last();
-                if (long.TryParse(idStr, out var id) && !processed.Contains(id.ToString())) {
+                if (long.TryParse(idStr, out var id) && processed.Add(id.ToString())) {
                     yield return uri;
                 }
             }

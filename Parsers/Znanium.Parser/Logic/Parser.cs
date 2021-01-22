@@ -9,31 +9,25 @@ using System.Web;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using HtmlAgilityPack;
+using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
 using Parser.Core.Types;
 using TurnerSoftware.SitemapTools;
 using TurnerSoftware.SitemapTools.Parser;
-using Znanium.Parser.Configs;
 
 namespace Znanium.Parser.Logic {
     public class Parser : ParserBase {
-        private readonly IParserConfig _config;
         protected override string ElsName => "Znarium";
 
-        public Parser(IParserConfig config, IRepository<Book> provider) : base(provider) {
-            _config = config;
+        public Parser(IParserConfigBase config, IRepository<Book> provider) : base(config, provider) {
         }
         
-        public async Task Parse() {
-            var client = HttpClientExtensions.GetClient(_config);
-
-            var processed = GetProcessed();
-
+        protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var getPageBlock = new TransformBlock<Uri, SitemapFile>(async url => await GetLinksSitemaps(client, url));
             getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
             
-            var filterBlock = new TransformManyBlock<SitemapFile, long>(async sitemap => Filter(sitemap, await processed));
+            var filterBlock = new TransformManyBlock<SitemapFile, long>(sitemap => Filter(sitemap, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
             var getBookBlock = new TransformBlock<long, Book>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
@@ -50,7 +44,7 @@ namespace Znanium.Parser.Logic {
                 await getPageBlock.SendAsync(sitemap.Location);
             }
 
-            await DataflowExtension.WaitBlocks(getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock);
+            return new IDataflowBlock[]{getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
         }
 
         /// <summary>
@@ -107,12 +101,12 @@ namespace Znanium.Parser.Logic {
             return book;
         }
 
-        private static IEnumerable<long> Filter(SitemapFile sitemap, ICollection<string> processed) {
+        private static IEnumerable<long> Filter(SitemapFile sitemap, ISet<string> processed) {
             foreach (var uri in sitemap.Urls) {
                 var pars = HttpUtility.ParseQueryString(uri.Location.Query);
 
                 var idStr = pars.Get("id");
-                if (long.TryParse(idStr, out var id) && !processed.Contains(id.ToString())) {
+                if (long.TryParse(idStr, out var id) && processed.Add(id.ToString())) {
                     yield return id;
                 }
             }

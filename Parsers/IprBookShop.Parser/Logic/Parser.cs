@@ -11,33 +11,27 @@ using HtmlAgilityPack;
 using IprBookShop.Parser.Configs;
 using IprBookShop.Parser.Types;
 using Newtonsoft.Json;
+using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
 using Parser.Core.Types;
 
 namespace IprBookShop.Parser.Logic {
     public class Parser : ParserBase {
-        private readonly IParserConfig _config;
-
         protected override string ElsName => "IprBookShop";
 
-        public Parser(IParserConfig config, IRepository<Book> provider) : base(provider) {
-            _config = config;
+        public Parser(IParserConfigBase config, IRepository<Book> provider) : base(config, provider) {
         }
 
         private static readonly Uri _apiUrl = new Uri("http://www.iprbookshop.ru/78575");
         
         private const int BOOKS_PER_PAGE = 20;
 
-        public async Task Parse() {
-            var client = HttpClientExtensions.GetClient(_config);
-            
-            var processed = await GetProcessed();
-
+        protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var getPageBlock = new TransformBlock<int, SearchResponseData>(async page => await GetSearchResponse(client, page));
             getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
             
-            var filterBlock = new TransformManyBlock<SearchResponseData, SearchData>(page => page.Data.Where(t => !processed.Contains(t.Id.ToString())));
+            var filterBlock = new TransformManyBlock<SearchResponseData, SearchData>(page => page.Data.Where(t => processed.Add(t.Id.ToString())), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
             var getBookBlock = new TransformBlock<SearchData, Book>(async book => await GetBook(client, book.Id), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
@@ -55,14 +49,14 @@ namespace IprBookShop.Parser.Logic {
             
             _logger.Info($"Всего книг в магазине {response.Count}. Страниц для обхода {pagesCount}");
             
-            for (var i = _config.StartPage; i <= pagesCount; i++) {
+            for (var i = ((IParserConfig)_config).StartPage; i <= pagesCount; i++) {
                 await getPageBlock.SendAsync(i);
             }
 
-            await DataflowExtension.WaitBlocks(getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock);
+            return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
         }
-        
-        public static string Normalize(string str) {
+
+        private static string Normalize(string str) {
             return string.IsNullOrEmpty(str) ? string.Empty : Regex.Replace(str, @"\s+", " ").Trim();
         }
 
