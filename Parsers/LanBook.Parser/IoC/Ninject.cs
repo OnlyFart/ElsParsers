@@ -2,9 +2,9 @@ using Core.Configs;
 using Core.IoC;
 using Core.Providers.Implementations;
 using Core.Providers.Interfaces;
+using Core.Types;
 using LanBook.Parser.Configs;
 using Parser.Core.Configs;
-using Parser.Core.Types;
 
 namespace LanBook.Parser.IoC {
     public class Ninject : CoreNinjectModule {
@@ -19,7 +19,7 @@ namespace LanBook.Parser.IoC {
 
             Bind<IMongoConfig>().ToConstant((IMongoConfig) _options);
             Bind<IParserConfigBase>().ToConstant((IParserConfig) _options);
-            Bind<IRepository<Book>>().To<MongoRepository<Book>>();
+            Bind<IRepository<BookInfo>>().To<MongoRepository<BookInfo>>();
         }
     }
 }

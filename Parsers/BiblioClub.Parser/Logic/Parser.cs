@@ -8,11 +8,11 @@ using BiblioClub.Parser.Configs;
 using BiblioClub.Parser.Types.API;
 using Core.Extensions;
 using Core.Providers.Interfaces;
+using Core.Types;
 using Newtonsoft.Json;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
-using Parser.Core.Types;
 
 namespace BiblioClub.Parser.Logic {
     public class Parser : ParserBase {
@@ -20,7 +20,7 @@ namespace BiblioClub.Parser.Logic {
 
         private static readonly Uri _apiUrl = new Uri("https://biblioclub.ru/services/service.php?page=books&m=GetShortInfo_S&parse&out=json");
 
-        public Parser(IParserConfigBase config, IRepository<Book> provider) : base(config, provider) {
+        public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) {
 
         }
 
@@ -31,11 +31,11 @@ namespace BiblioClub.Parser.Logic {
             
             var filterBlock = new TransformManyBlock<IEnumerable<ShortInfo>, ShortInfo>(shortInfos => Filter(shortInfos, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
             var batchBlock2 = new BatchBlock<ShortInfo>(50);
-            var getBibBlock = new TransformManyBlock<ShortInfo[], Book>(async books => await GetBib(client, books), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false });
+            var getBibBlock = new TransformManyBlock<ShortInfo[], BookInfo>(async books => await GetBib(client, books), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false });
             getBibBlock.CompleteMessage(_logger, "Получения библиографического описания по всем книгам завершено. Ждем сохранения.");
             
-            var batchBlock3 = new BatchBlock<Book>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.CreateMany(books));
+            var batchBlock3 = new BatchBlock<BookInfo>(_config.BatchSize);
+            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await _provider.CreateMany(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             batchBlock1.LinkTo(getPageBlock);
@@ -69,18 +69,18 @@ namespace BiblioClub.Parser.Logic {
         }
         
 
-        private async Task<IEnumerable<Book>> GetBib(HttpClient client, ShortInfo[] shortInfos) {
+        private async Task<IEnumerable<BookInfo>> GetBib(HttpClient client, ShortInfo[] shortInfos) {
             if (shortInfos == default) {
-                return Enumerable.Empty<Book>();
+                return Enumerable.Empty<BookInfo>();
             }
             
             var resp = await client.GetStringWithTriesAsync(new Uri("https://biblioclub.ru/index.php?action=blocks&list=" + string.Join(",", shortInfos.Select(s => "biblio:" + s.Id))));
             if (string.IsNullOrEmpty(resp)) {
-                return Enumerable.Empty<Book>();
+                return Enumerable.Empty<BookInfo>();
             }
             
             var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(resp);
-            return shortInfos.Select(shortInfo => new Book(shortInfo.Id.ToString(), ElsName) {
+            return shortInfos.Select(shortInfo => new BookInfo(shortInfo.Id.ToString(), ElsName) {
                 Authors = shortInfo.Author,
                 Bib = dict["biblio:" + shortInfo.Id],
                 ISBN = shortInfo.ISBN,
