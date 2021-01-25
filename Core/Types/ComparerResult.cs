@@ -3,14 +3,14 @@ namespace Core.Types {
         /// <summary>
         /// Разница в "процентах" между двумя строками
         /// </summary>
-        public readonly decimal Diff;
+        public double Diff;
 
         /// <summary>
         /// Удовлетворяет ли разница критерию похожести
         /// </summary>
-        public readonly bool Success;
+        public bool Success;
         
-        public ComparerResult(decimal diff, bool success) {
+        public ComparerResult(double diff, bool success) {
             Diff = diff;
             Success = success;
         }

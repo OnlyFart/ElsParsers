@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Book.Comparer.Configs;
 using Book.Comparer.Logic.Comparers;
 using Book.Comparer.Logic.Extensions;
 using Book.Comparer.Logic.Types;
@@ -22,10 +23,12 @@ namespace Book.Comparer.Logic {
         
         private readonly IRepository<BookInfo> _bookRepository;
         private readonly IBookComparer _bookComparer;
+        private readonly IComparerConfig _comparerConfig;
 
-        public Comparer(IRepository<BookInfo> bookRepository, IBookComparer bookComparer) {
+        public Comparer(IRepository<BookInfo> bookRepository, IBookComparer bookComparer, IComparerConfig comparerConfig) {
             _bookRepository = bookRepository;
             _bookComparer = bookComparer;
+            _comparerConfig = comparerConfig;
         }
         
         /// <summary>
@@ -168,7 +171,7 @@ namespace Book.Comparer.Logic {
             var books = await GetBooks();
             var wordToBooks = CreateWordToBooksMap(books);
             
-            var findSimilarBlock = new TransformBlock<CompareBook, SaveResult>(book => FindSimilar(book, wordToBooks), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 7, EnsureOrdered = false });
+            var findSimilarBlock = new TransformBlock<CompareBook, SaveResult>(book => FindSimilar(book, wordToBooks), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _comparerConfig.MaxThread, EnsureOrdered = false });
             findSimilarBlock.CompleteMessage(_logger, "Закончили сравнение всех книг. Ждем сохранения.");
             
             var updateBooks = new ActionBlock<SaveResult>(async book => await UpdateSimilarBooks(book));

@@ -2,7 +2,7 @@ namespace Book.Comparer.Logic.Utils {
     public class Levenstein {
         private static int Minimum(int a, int b, int c) => (a = a < b ? a : b) < c ? a : c;
         
-        public static decimal Distance(string firstWord, string secondWord) {
+        public static double Distance(string firstWord, string secondWord) {
             var n = firstWord.Length + 1;
             var m = secondWord.Length + 1;
             var matrixD = new int[n, m];
