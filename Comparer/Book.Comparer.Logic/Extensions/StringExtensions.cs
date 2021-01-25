@@ -67,6 +67,12 @@ namespace Book.Comparer.Logic.Extensions {
             return string.IsNullOrWhiteSpace(str) ? new string[] { } : _nonCharacter.Split(str);
         }
 
+        /// <summary>
+        /// Удалить из строки все, что попадает по Regex
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="regex"></param>
+        /// <returns></returns>
         private static string RemoveRegex(string str, Regex regex) {
             return string.IsNullOrWhiteSpace(str) ? string.Empty : regex.Replace(str, string.Empty);
         }

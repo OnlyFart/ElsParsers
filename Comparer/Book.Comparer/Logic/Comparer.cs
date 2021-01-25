@@ -6,6 +6,7 @@ using Book.Comparer.Configs;
 using Book.Comparer.Logic.Comparers;
 using Book.Comparer.Logic.Extensions;
 using Book.Comparer.Logic.Types;
+using Book.Comparer.Types;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;
@@ -14,11 +15,6 @@ using NLog;
 
 namespace Book.Comparer.Logic {
     public class Comparer {
-        private class SaveResult {
-            public BookInfo Book;
-            public HashSet<BookInfo> SimilarBooks;
-        }
-        
         private static readonly Logger _logger = LogManager.GetLogger(nameof(Comparer));
         
         private readonly IRepository<BookInfo> _bookRepository;
@@ -63,9 +59,7 @@ namespace Book.Comparer.Logic {
                     }
 
                     thisBook.BookInfo.AddSimilar(otherBook.BookInfo, comparerResult);
-                    if (!otherBook.BookInfo.AddSimilar(thisBook.BookInfo, comparerResult)) {
-                        continue;
-                    }
+                    otherBook.BookInfo.AddSimilar(thisBook.BookInfo, comparerResult);
                     
                     result.SimilarBooks.Add(otherBook.BookInfo);
                     
