@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
+using Core.Types;
 using LanBook.Parser.Configs;
 using LanBook.Parser.Types.API;
 using LanBook.Parser.Types.API.BooksExtend;
@@ -14,13 +15,12 @@ using Newtonsoft.Json;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
-using Parser.Core.Types;
 
 namespace LanBook.Parser.Logic {
     public class Parser : ParserBase {
         protected override string ElsName => "LanBook";
 
-        public Parser(IParserConfigBase config, IRepository<Book> provider) : base(config, provider) {
+        public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) {
         }
         
         private const int BOOKS_PER_PAGE = 1000;
@@ -32,11 +32,11 @@ namespace LanBook.Parser.Logic {
             getPageBlock.CompleteMessage(_logger, "Обход всего каталога успешно завершен. Ждем получения всех книг.");
             
             var filterBlock = new TransformManyBlock<ApiResponse<BooksShortBody>, BookShort>(apiResponse => Filter(apiResponse, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
-            var getBookBlock = new TransformBlock<BookShort, Book>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
+            var getBookBlock = new TransformBlock<BookShort, BookInfo>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
-            var batchBlock = new BatchBlock<Book>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.CreateMany(books));
+            var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
+            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await _provider.CreateMany(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             getPageBlock.LinkTo(filterBlock);
@@ -72,14 +72,14 @@ namespace LanBook.Parser.Logic {
         /// <param name="client"></param>
         /// <param name="bookShort"></param>
         /// <returns></returns>
-        private async Task<Book> GetBook(HttpClient client, BookShort bookShort) {
+        private async Task<BookInfo> GetBook(HttpClient client, BookShort bookShort) {
             if (bookShort == default) {
                 return default;
             }
             
             var content = await client.GetStringWithTriesAsync(new Uri($"https://e.lanbook.com/api/v2/catalog/book/{bookShort.Id}"));
             var bookExtend = JsonConvert.DeserializeObject<ApiResponse<BookExtend>>(content);
-            return string.IsNullOrEmpty(content) ? default : new Book(bookShort.Id.ToString(), ElsName) {
+            return string.IsNullOrEmpty(content) ? default : new BookInfo(bookShort.Id.ToString(), ElsName) {
                 Authors = bookExtend.Body.Authors,
                 Bib = bookExtend.Body.BiblioRecord,
                 ISBN = bookExtend.Body.ISBN,

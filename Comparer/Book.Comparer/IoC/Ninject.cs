@@ -1,13 +1,14 @@
+using Book.Comparer.Configs;
+using Book.Comparer.Logic.Comparers;
+using Book.Comparer.Logic.Configs;
 using Core.Configs;
-using Core.IoC;
 using Core.Providers.Implementations;
 using Core.Providers.Interfaces;
 using Core.Types;
-using Parser.Core.Configs;
-using Znanium.Parser.Configs;
+using Ninject.Modules;
 
-namespace Znanium.Parser.IoC {
-    public class Ninject : CoreNinjectModule {
+namespace Book.Comparer.IoC {
+    public class Ninject : NinjectModule {
         private readonly Options _options;
 
         public Ninject(Options options) {
@@ -15,10 +16,10 @@ namespace Znanium.Parser.IoC {
         }
 
         public override void Load() {
-            base.Load();
-
             Bind<IMongoConfig>().ToConstant((IMongoConfig) _options);
-            Bind<IParserConfigBase>().ToConstant((IParserConfig) _options);
+            Bind<IComparerConfig>().ToConstant((IComparerConfig) _options);
+            Bind<IBookComparer>().To<BookComparer>();
+            Bind<IBookComparerConfig>().ToConstant((IBookComparerConfig) _options);
             Bind<IRepository<BookInfo>>().To<MongoRepository<BookInfo>>();
         }
     }

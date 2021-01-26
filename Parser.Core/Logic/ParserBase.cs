@@ -1,23 +1,24 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
+using Core.Types;
 using MongoDB.Driver;
 using NLog;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
-using Parser.Core.Types;
 
 namespace Parser.Core.Logic {
     public abstract class ParserBase {
         protected static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
 
         protected readonly IParserConfigBase _config;
-        protected readonly IRepository<Book> _provider;
+        protected readonly IRepository<BookInfo> _provider;
         
-        protected ParserBase(IParserConfigBase config, IRepository<Book> provider) {
+        protected ParserBase(IParserConfigBase config, IRepository<BookInfo> provider) {
             _config = config;
             _provider = provider;
         }
@@ -37,7 +38,7 @@ namespace Parser.Core.Logic {
         /// </summary>
         /// <returns></returns>
         protected Task<HashSet<string>> GetProcessed() {
-            return _provider.Read(Builders<Book>.Filter.Eq(t => t.ElsName, ElsName), book => book.ExternalId).ContinueWith(t => new HashSet<string>(t.Result));
+            return _provider.Read(Builders<BookInfo>.Filter.Eq(t => t.ElsName, ElsName), book => book.ExternalId).ContinueWith(t => t.Result.ToHashSet());
         }
     }
 }

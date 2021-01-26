@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
+using Core.Types;
 using HtmlAgilityPack;
 using IprBookShop.Parser.Configs;
 using IprBookShop.Parser.Types;
@@ -14,13 +15,12 @@ using Newtonsoft.Json;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
-using Parser.Core.Types;
 
 namespace IprBookShop.Parser.Logic {
     public class Parser : ParserBase {
         protected override string ElsName => "IprBookShop";
 
-        public Parser(IParserConfigBase config, IRepository<Book> provider) : base(config, provider) {
+        public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) {
         }
 
         private static readonly Uri _apiUrl = new Uri("http://www.iprbookshop.ru/78575");
@@ -32,11 +32,11 @@ namespace IprBookShop.Parser.Logic {
             getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
             
             var filterBlock = new TransformManyBlock<SearchResponseData, SearchData>(page => page.Data.Where(t => processed.Add(t.Id.ToString())), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
-            var getBookBlock = new TransformBlock<SearchData, Book>(async book => await GetBook(client, book.Id), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
+            var getBookBlock = new TransformBlock<SearchData, BookInfo>(async book => await GetBook(client, book.Id), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
-            var batchBlock = new BatchBlock<Book>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.CreateMany(books));
+            var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
+            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await _provider.CreateMany(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             getPageBlock.LinkTo(filterBlock);
@@ -66,7 +66,7 @@ namespace IprBookShop.Parser.Logic {
         /// <param name="client"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        private async Task<Book> GetBook(HttpClient client, long id) {
+        private async Task<BookInfo> GetBook(HttpClient client, long id) {
             var url = new Uri($"http://www.iprbookshop.ru/{id}.html");
 
             var content = await client.GetStringWithTriesAsync(url);
@@ -76,7 +76,7 @@ namespace IprBookShop.Parser.Logic {
 
             var bookInfoBlock = doc.DocumentNode.GetByFilterFirst("div", "book-information");
 
-            var book = new Book(id.ToString(), ElsName) {
+            var book = new BookInfo(id.ToString(), ElsName) {
                 Name = Normalize(bookInfoBlock?.GetByFilterFirst("h4", "header-orange")?.InnerText),
                 Bib = Normalize(bookInfoBlock?.GetByFilterFirst("h3", "header-green")?.NextSibling.NextSibling.InnerText)
             };

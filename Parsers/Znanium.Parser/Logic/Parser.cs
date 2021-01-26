@@ -8,11 +8,11 @@ using System.Threading.Tasks.Dataflow;
 using System.Web;
 using Core.Extensions;
 using Core.Providers.Interfaces;
+using Core.Types;
 using HtmlAgilityPack;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
-using Parser.Core.Types;
 using TurnerSoftware.SitemapTools;
 using TurnerSoftware.SitemapTools.Parser;
 
@@ -20,19 +20,19 @@ namespace Znanium.Parser.Logic {
     public class Parser : ParserBase {
         protected override string ElsName => "Znarium";
 
-        public Parser(IParserConfigBase config, IRepository<Book> provider) : base(config, provider) {
+        public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) {
         }
         
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var getPageBlock = new TransformBlock<Uri, SitemapFile>(async url => await GetLinksSitemaps(client, url));
-            getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
+            getPageBlock.CompleteMessage(_logger, "Обход карт сайта успешно завершен. Ждем получения всех книг.");
             
             var filterBlock = new TransformManyBlock<SitemapFile, long>(sitemap => Filter(sitemap, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
-            var getBookBlock = new TransformBlock<long, Book>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
+            var getBookBlock = new TransformBlock<long, BookInfo>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
-            var batchBlock = new BatchBlock<Book>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.CreateMany(books));
+            var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
+            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await _provider.CreateMany(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             getPageBlock.LinkTo(filterBlock);
@@ -53,7 +53,7 @@ namespace Znanium.Parser.Logic {
         /// <param name="client"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        private async Task<Book> GetBook(HttpClient client, long id) {
+        private async Task<BookInfo> GetBook(HttpClient client, long id) {
             var content = await client.GetStringWithTriesAsync(new Uri($"https://znanium.com/catalog/document?id={id}"));
             if (string.IsNullOrEmpty(content)) {
                 return default;
@@ -65,7 +65,7 @@ namespace Znanium.Parser.Logic {
             var bookContent = doc.DocumentNode.GetByFilterFirst("div", "book-content");
             var bookInfoBlock = bookContent.GetByFilterFirst("div", "desktop-book-header");
 
-            var book = new Book(id.ToString(), ElsName) {
+            var book = new BookInfo(id.ToString(), ElsName) {
                 Name = bookInfoBlock.GetByFilterFirst("h1")?.InnerText.Trim(),
                 Bib = doc.GetElementbyId("doc-biblio-card").InnerText.Trim()
             };

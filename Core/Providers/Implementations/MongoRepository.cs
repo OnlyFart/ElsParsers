@@ -32,6 +32,27 @@ namespace Core.Providers.Implementations {
             return listAsync;
         }
 
+        public async Task<bool> Update(FilterDefinition<T> filter, UpdateDefinition<T> update) {
+            try {
+                 await _collection.UpdateOneAsync(filter, update);
+                 return true;
+            } catch (Exception ex) {
+                _logger.Error(ex);
+            }
+
+            return false;
+        }
+
+        public async Task<IEnumerable<TValue>> Read<TValue>(FilterDefinition<T> filter, ProjectionDefinition<T, TValue> projection) {
+            _logger.Info($"Выполняю загрузку из {_config.DatabaseName}/{_config.CollectionName}");
+
+            var listAsync = await _collection.Find(filter).Project(projection).ToListAsync();
+
+            _logger.Info($"Загружено {listAsync.Count} записей");
+
+            return listAsync;
+        }
+
         public async Task CreateMany(IEnumerable<T> items) {
             var toSave = items.Where(t => t != null).ToList();
 

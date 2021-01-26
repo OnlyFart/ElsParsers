@@ -8,30 +8,30 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
+using Core.Types;
 using HtmlAgilityPack;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
-using Parser.Core.Types;
 using TurnerSoftware.SitemapTools.Parser;
 
 namespace Urait.Parser.Logic {
     public class Parser : ParserBase {
         protected override string ElsName => "Urait";
         
-        public Parser(IParserConfigBase config, IRepository<Book> provider) : base(config, provider) {
+        public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) {
 
         }
         
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(uris => Filter(uris, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
-            filterBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
+            filterBlock.CompleteMessage(_logger, "Получение всех ссылок на книги успешно завершено. Ждем загрузки всех книг.");
             
-            var getBookBlock = new TransformBlock<Uri, Book>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
-            getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
+            var getBookBlock = new TransformBlock<Uri, BookInfo>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
+            getBookBlock.CompleteMessage(_logger, "Загрузка всех книг завершено. Ждем сохранения.");
             
-            var batchBlock = new BatchBlock<Book>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<Book[]>(async books => await _provider.CreateMany(books));
+            var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
+            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await _provider.CreateMany(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
             
             filterBlock.LinkTo(getBookBlock);
@@ -49,7 +49,7 @@ namespace Urait.Parser.Logic {
         /// <param name="client"></param>
         /// <param name="uri"></param>
         /// <returns></returns>
-        private async Task<Book> GetBook(HttpClient client, Uri uri) {
+        private async Task<BookInfo> GetBook(HttpClient client, Uri uri) {
             var content = await client.GetStringWithTriesAsync(uri);
             if (string.IsNullOrEmpty(content)) {
                 return default;
@@ -58,7 +58,7 @@ namespace Urait.Parser.Logic {
             var doc = new HtmlDocument();
             doc.LoadHtml(content);
 
-            var book = new Book(uri.Segments.Last().Split("-").Last(), ElsName) {
+            var book = new BookInfo(uri.Segments.Last().Split("-").Last(), ElsName) {
                 Name = doc.DocumentNode.GetByFilterFirst("h1", "book_title")?.InnerText.Trim(), 
                 Authors = doc.DocumentNode.GetByFilterFirst("ul", "creation-info__authors")?.FirstChild?.InnerText?.Trim(), 
                 Year = doc.DocumentNode.GetByFilterFirst("div", "creation-info__year")?.InnerText?.Trim(),
