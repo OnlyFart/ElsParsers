@@ -87,16 +87,17 @@ namespace Book.Comparer.Logic {
             var externalIdEqual = Builders<BookInfo>.Filter.Eq(t => t.ExternalId, book.ExternalId);
 
             return Builders<BookInfo>.Filter.And(elsEqual, externalIdEqual);
-        } 
+        }
 
         /// <summary>
         /// Сохранение результатов поиска похожести для книги
         /// </summary>
         /// <param name="book"></param>
+        /// <param name="compared">Можно ли пометить книгу, как успешно сравненную</param>
         /// <returns></returns>
-        private async Task UpdateProcessedBook(BookInfo book) {
+        private async Task UpdateProcessedBook(BookInfo book, bool compared) {
             var update = Builders<BookInfo>.Update
-                .Set(t => t.Compared, true)
+                .Set(t => t.Compared, compared)
                 .Set(t => t.Similar, book.Similar);
             
             await _bookRepository.Update(GetEqualsFilter(book), update);
@@ -107,13 +108,19 @@ namespace Book.Comparer.Logic {
         /// </summary>
         /// <param name="saveResult"></param>
         /// <returns></returns>
-        private async Task UpdateSimilarBooks(SaveResult saveResult) {
+        private void UpdateSimilarBooks(SaveResult saveResult) {
+            var compared = true;
+            
             foreach (var similarBook in saveResult.SimilarBooks) {
-                var update = Builders<BookInfo>.Update.Set(t => t.Similar, similarBook.Similar);
-                await _bookRepository.Update(GetEqualsFilter(similarBook), update);
+                lock (similarBook.Similar) {
+                    var update = Builders<BookInfo>.Update.Set(t => t.Similar, similarBook.Similar);
+                    compared &= _bookRepository.Update(GetEqualsFilter(similarBook), update).Result;
+                }
             }
             
-            await UpdateProcessedBook(saveResult.Book);
+            lock (saveResult.Book.Similar) {
+                UpdateProcessedBook(saveResult.Book, compared).Wait();
+            }
         }
 
         /// <summary>
@@ -168,7 +175,7 @@ namespace Book.Comparer.Logic {
             var findSimilarBlock = new TransformBlock<CompareBook, SaveResult>(book => FindSimilar(book, wordToBooks), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _comparerConfig.MaxThread, EnsureOrdered = false });
             findSimilarBlock.CompleteMessage(_logger, "Закончили сравнение всех книг. Ждем сохранения.");
             
-            var updateBooks = new ActionBlock<SaveResult>(async book => await UpdateSimilarBooks(book));
+            var updateBooks = new ActionBlock<SaveResult>(UpdateSimilarBooks);
             updateBooks.CompleteMessage(_logger, "Сохранение завершено.");
 
             findSimilarBlock.LinkTo(updateBooks);

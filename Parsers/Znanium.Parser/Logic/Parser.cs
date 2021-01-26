@@ -25,7 +25,7 @@ namespace Znanium.Parser.Logic {
         
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var getPageBlock = new TransformBlock<Uri, SitemapFile>(async url => await GetLinksSitemaps(client, url));
-            getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
+            getPageBlock.CompleteMessage(_logger, "Обход карт сайта успешно завершен. Ждем получения всех книг.");
             
             var filterBlock = new TransformManyBlock<SitemapFile, long>(sitemap => Filter(sitemap, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
             var getBookBlock = new TransformBlock<long, BookInfo>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});

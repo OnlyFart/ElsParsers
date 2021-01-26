@@ -10,7 +10,7 @@ namespace Core.Providers.Interfaces {
 
         Task<IEnumerable<TValue>> Read<TValue>(FilterDefinition<T> filter, Expression<Func<T, TValue>> projection);
 
-        Task Update(FilterDefinition<T> filter, UpdateDefinition<T> update);
+        Task<bool> Update(FilterDefinition<T> filter, UpdateDefinition<T> update);
 
         Task CreateMany(IEnumerable<T> items);
     }

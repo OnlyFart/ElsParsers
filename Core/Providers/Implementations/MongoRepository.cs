@@ -32,12 +32,15 @@ namespace Core.Providers.Implementations {
             return listAsync;
         }
 
-        public async Task Update(FilterDefinition<T> filter, UpdateDefinition<T> update) {
+        public async Task<bool> Update(FilterDefinition<T> filter, UpdateDefinition<T> update) {
             try {
-                await _collection.UpdateOneAsync(filter, update);
+                 await _collection.UpdateOneAsync(filter, update);
+                 return true;
             } catch (Exception ex) {
                 _logger.Error(ex);
             }
+
+            return false;
         }
 
         public async Task<IEnumerable<TValue>> Read<TValue>(FilterDefinition<T> filter, ProjectionDefinition<T, TValue> projection) {

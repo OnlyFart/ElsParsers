@@ -9,7 +9,7 @@ namespace Book.Comparer.Logic.Extensions {
         private static readonly Regex _nonSignCharacters = new Regex("\\b\\w\\w?\\b|\\d", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _nonCharacter = new Regex("\\W", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _nonDigits = new Regex("\\D", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        public static HashSet<string> BadWords = new HashSet<string> {
+        public static readonly HashSet<string> BadWords = new HashSet<string> {
             "под", "науч", "ред", "отв", "общ", "пер"
         };  
         
