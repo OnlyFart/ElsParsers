@@ -6,6 +6,7 @@ using Book.Comparer.Configs;
 using Book.Comparer.Logic.Comparers;
 using Book.Comparer.Logic.Extensions;
 using Book.Comparer.Logic.Types;
+using Book.Comparer.Logic.Utils;
 using Book.Comparer.Types;
 using Core.Extensions;
 using Core.Providers.Interfaces;
@@ -18,11 +19,13 @@ namespace Book.Comparer.Logic {
         private static readonly Logger _logger = LogManager.GetLogger(nameof(Comparer));
         
         private readonly IRepository<BookInfo> _bookRepository;
+        private readonly Normalizer _normalizer;
         private readonly IBookComparer _bookComparer;
         private readonly IComparerConfig _comparerConfig;
 
-        public Comparer(IRepository<BookInfo> bookRepository, IBookComparer bookComparer, IComparerConfig comparerConfig) {
+        public Comparer(IRepository<BookInfo> bookRepository, Normalizer normalizer, IBookComparer bookComparer, IComparerConfig comparerConfig) {
             _bookRepository = bookRepository;
+            _normalizer = normalizer;
             _bookComparer = bookComparer;
             _comparerConfig = comparerConfig;
         }
@@ -159,9 +162,19 @@ namespace Book.Comparer.Logic {
             
             var filterDefinition = Builders<BookInfo>.Filter
                 .Where(t => t.Name != null && t.Name.Length > 0 && t.Authors != null && t.Authors.Length > 0);
+
+            var result = new List<CompareBook>();
+            var books = await _bookRepository.Read(filterDefinition, projection);
+
+            _logger.Info("Начинаю преобразование книг в сравниваемые");
             
-            return await _bookRepository.Read(filterDefinition, projection)
-                .ContinueWith(t => t.Result.Select(b => new CompareBook(b)).ToList());
+            foreach (var book in books) {
+                var compareBook = new CompareBook(book);
+                compareBook.Init(_normalizer);
+                result.Add(compareBook);
+            }
+
+            return result;
         }
 
         /// <summary>

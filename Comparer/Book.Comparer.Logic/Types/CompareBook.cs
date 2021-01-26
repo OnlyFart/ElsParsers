@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Book.Comparer.Logic.Extensions;
+using Book.Comparer.Logic.Utils;
 using Core.Types;
 
 namespace Book.Comparer.Logic.Types {
@@ -11,24 +12,23 @@ namespace Book.Comparer.Logic.Types {
 
         public CompareBook(BookInfo bookInfo) {
             BookInfo = bookInfo;
-            Init();
         }
 
         /// <summary>
         /// Построение ключа по которому будет происходить построение
         /// </summary>
-        private void Init() {
+        public void Init(Normalizer normalizer) {
             // ГОСТ 5812-2014
             if (BookInfo.Similar == null) {
                 BookInfo.Similar = new HashSet<BookInfo>();
             }
             
             Key = new CompareBookKey {
-                ISBN = (string.IsNullOrEmpty(BookInfo.ISBN) ? BookInfo.ISSN ?? string.Empty : BookInfo.ISBN).OnlyDigits(),
-                Year = (BookInfo.Year ?? string.Empty).OnlyDigits(),
-                Publisher = (BookInfo.Publisher ?? string.Empty).ToLowerInvariant().RemoveNonSignWords().RemoveNonSignCharacters().RemoveNonCharacters().RemoveVowels(),
-                Name = (BookInfo.Name ?? string.Empty).ToLowerInvariant().RemoveNonSignWords().RemoveNonSignCharacters().RemoveNonCharacters().RemoveVowels(),
-                NameWords = (BookInfo.Name ?? string.Empty).ToLowerInvariant().RemoveNonSignWords().RemoveNonSignCharacters().RemoveVowels().SplitWords().Where(w => !string.IsNullOrWhiteSpace(w)).ToHashSet(),
+                ISBN = normalizer.OnlyDigits(string.IsNullOrEmpty(BookInfo.ISBN) ? BookInfo.ISSN ?? string.Empty : BookInfo.ISBN),
+                Year = normalizer.OnlyDigits(BookInfo.Year ?? string.Empty),
+                Publisher = normalizer.FullClean((BookInfo.Publisher ?? string.Empty).ToLowerInvariant()),
+                Name = normalizer.FullClean((BookInfo.Name ?? string.Empty).ToLowerInvariant()),
+                NameWords = normalizer.SplitWords(normalizer.RemoveVowels(normalizer.ShortClean((BookInfo.Name ?? string.Empty).ToLowerInvariant()))).Where(w => !string.IsNullOrWhiteSpace(w)).ToHashSet(),
                 Authors = new HashSet<string>() 
             };
 
@@ -37,21 +37,21 @@ namespace Book.Comparer.Logic.Types {
             }
 
             foreach (var author in BookInfo.Authors.ToLowerInvariant().Split(new []{ ",", ";", ":" }, StringSplitOptions.RemoveEmptyEntries)) {
-                var split = author.SplitWords().Where(t => !string.IsNullOrWhiteSpace(t) && !StringExtensions.BadWords.Contains(t)).ToArray();
+                var split = normalizer.SplitWords(author).Where(t => !string.IsNullOrWhiteSpace(t) && !normalizer.NonSingAuthorWords.Contains(t)).ToArray();
 
                 // Если паттерн ФИО стандартный или перестановок будет очень много, то перестановки не генерим
                 if (CheckFio(split, 2) || CheckFio(split, 3) || split.Length >= 5) {
-                    Key.Authors.Add(split.FirstFullOtherFirst());
+                    Key.Authors.Add(normalizer.FirstFullOtherFirst(split));
                 } else {
                     foreach (var permutation in split.AllPermutations()) {
-                        Key.Authors.Add(permutation.ToArray().FirstFullOtherFirst());
+                        Key.Authors.Add(normalizer.FirstFullOtherFirst(permutation.ToArray()));
                     }
                 }
             }
         }
         
         /// <summary>
-        /// Проверка FIO на паттерн "Фамилия И. О."
+        /// Проверка ФИО на паттерн "Фамилия И. О."
         /// </summary>
         /// <param name="fio"></param>
         /// <param name="length"></param>

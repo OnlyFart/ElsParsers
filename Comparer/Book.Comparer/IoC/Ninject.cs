@@ -5,6 +5,7 @@ using Core.Configs;
 using Core.Providers.Implementations;
 using Core.Providers.Interfaces;
 using Core.Types;
+using Microsoft.Extensions.Configuration;
 using Ninject.Modules;
 
 namespace Book.Comparer.IoC {
@@ -16,6 +17,13 @@ namespace Book.Comparer.IoC {
         }
 
         public override void Load() {
+            IConfiguration configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", true,true)
+                .Build();
+
+            var normalizerConfig = configuration.GetSection("NormalizerConfig").Get<NormalizerConfig>();
+
+            Bind<NormalizerConfig>().ToConstant(normalizerConfig);
             Bind<IMongoConfig>().ToConstant((IMongoConfig) _options);
             Bind<IComparerConfig>().ToConstant((IComparerConfig) _options);
             Bind<IBookComparer>().To<BookComparer>();

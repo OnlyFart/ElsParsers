@@ -1,24 +1,37 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Book.Comparer.Logic.Configs;
 
-namespace Book.Comparer.Logic.Extensions {
-    public static class StringExtensions {
-        private static readonly Regex _nonSignWords = new Regex("томах|том|часть|частях|части|учебно\\-методический комплекс|практикум|роман|методическ|практическ|сборник|художественн|литератур|научн|популярн|издание|публицистик|документальн|учебник|учебн|пособ|монограф", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-        private static readonly Regex _vowels = new Regex("[_ёуейиыаоэяиюьъeuoai]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+namespace Book.Comparer.Logic.Utils {
+    public class Normalizer {
+        private readonly Regex _nonSignWords;
+        private readonly Regex _vowels;
         private static readonly Regex _nonSignCharacters = new Regex("\\b\\w\\w?\\b|\\d", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _nonCharacter = new Regex("\\W", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _nonDigits = new Regex("\\D", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        public static readonly HashSet<string> BadWords = new HashSet<string> {
-            "под", "науч", "ред", "отв", "общ", "пер"
-        };  
+        public readonly HashSet<string> NonSingAuthorWords;
+
+        public Normalizer(NormalizerConfig config) {
+            _nonSignWords = new Regex(config.Regexes.NonSignWords, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+            _vowels = new Regex(config.Regexes.Vowels, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+            NonSingAuthorWords = new HashSet<string>(config.Lists.NonSingAuthorWords);
+        }
+
+        public string FullClean(string str) {
+            return RemoveVowels(RemoveNonCharacters(ShortClean(str)));
+        }
+        
+        public string ShortClean(string str) {
+            return RemoveNonSignCharacters(RemoveNonSignWords(str));
+        }
         
         /// <summary>
         /// Оставить в строке только цифры
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static string OnlyDigits(this string str) {
+        public string OnlyDigits(string str) {
             return RemoveRegex(str, _nonDigits);
         }
 
@@ -27,7 +40,7 @@ namespace Book.Comparer.Logic.Extensions {
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static string RemoveVowels(this string str) {
+        public string RemoveVowels(string str) {
             return RemoveRegex(str, _vowels);
         }
         
@@ -36,7 +49,7 @@ namespace Book.Comparer.Logic.Extensions {
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static string RemoveNonSignWords(this string str) {
+        public string RemoveNonSignWords(string str) {
             return RemoveRegex(str, _nonSignWords);
         }
         
@@ -45,7 +58,7 @@ namespace Book.Comparer.Logic.Extensions {
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static string RemoveNonSignCharacters(this string str) {
+        public string RemoveNonSignCharacters(string str) {
             return RemoveRegex(str, _nonSignCharacters);
         }
         
@@ -54,7 +67,7 @@ namespace Book.Comparer.Logic.Extensions {
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static string RemoveNonCharacters(this string str) {
+        public string RemoveNonCharacters(string str) {
             return RemoveRegex(str, _nonCharacter);
         }
 
@@ -63,7 +76,7 @@ namespace Book.Comparer.Logic.Extensions {
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static IEnumerable<string> SplitWords(this string str) {
+        public IEnumerable<string> SplitWords(string str) {
             return string.IsNullOrWhiteSpace(str) ? new string[] { } : _nonCharacter.Split(str);
         }
 
@@ -73,7 +86,7 @@ namespace Book.Comparer.Logic.Extensions {
         /// <param name="str"></param>
         /// <param name="regex"></param>
         /// <returns></returns>
-        private static string RemoveRegex(string str, Regex regex) {
+        private string RemoveRegex(string str, Regex regex) {
             return string.IsNullOrWhiteSpace(str) ? string.Empty : regex.Replace(str, string.Empty);
         }
         
@@ -82,7 +95,7 @@ namespace Book.Comparer.Logic.Extensions {
         /// </summary>
         /// <param name="split"></param>
         /// <returns></returns>
-        public static string FirstFullOtherFirst(this string[] split) {
+        public string FirstFullOtherFirst(string[] split) {
             if (split.Length == 0) {
                 return string.Empty;
             }
