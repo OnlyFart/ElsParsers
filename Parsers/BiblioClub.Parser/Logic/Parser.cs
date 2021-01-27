@@ -74,7 +74,7 @@ namespace BiblioClub.Parser.Logic {
                 return Enumerable.Empty<BookInfo>();
             }
             
-            var resp = await client.GetStringWithTriesAsync(new Uri("https://biblioclub.ru/index.php?action=blocks&list=" + string.Join(",", shortInfos.Select(s => "biblio:" + s.Id))));
+            var resp = await client.GetStringWithTriesAsync(new Uri("https://biblioclub.ru/index.php?action=blocks&list=" + shortInfos.Select(s => "biblio:" + s.Id).StrJoin(",")));
             if (string.IsNullOrEmpty(resp)) {
                 return Enumerable.Empty<BookInfo>();
             }

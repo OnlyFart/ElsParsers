@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Book.Comparer.Configs;
 using Book.Comparer.Logic.Comparers;
-using Book.Comparer.Logic.Extensions;
 using Book.Comparer.Logic.Types;
 using Book.Comparer.Logic.Utils;
 using Book.Comparer.Types;

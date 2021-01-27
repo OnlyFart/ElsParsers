@@ -77,7 +77,7 @@ namespace Znanium.Parser.Logic {
                 if (name.Contains("Издательство")) {
                     book.Publisher = value.FirstOrDefault()?.InnerText;
                 } else if (name.Contains("Авторы")) {
-                    book.Authors = string.Join(", ", value.Where(t => !string.IsNullOrEmpty(t.InnerText)).Select(t => t?.InnerText?.Trim()));
+                    book.Authors = value.Where(t => !string.IsNullOrEmpty(t.InnerText)).Select(t => t?.InnerText?.Trim()).StrJoin(", ");
                 }
             }
             

@@ -71,7 +71,7 @@ namespace Urait.Parser.Logic {
                     continue;
                 }
                 
-                var value = string.Join(", ", div.GetByFilter("span", "book-about-produce__info").Select(t => t.InnerText.Trim()));
+                var value = div.GetByFilter("span", "book-about-produce__info").Select(t => t.InnerText.Trim()).StrJoin(", ");
 
                 if (name == "isbn") {
                     book.ISBN = value;
@@ -82,7 +82,7 @@ namespace Urait.Parser.Logic {
             
             foreach (var div in doc.DocumentNode.GetByFilter("div", "book-about-info__item")) {
                 var name = div.GetByFilterFirst("div", "book-about-info__title")?.InnerText.ToLower().Trim();
-                var value = string.Join(", ", div.GetByFilter("div", "book-about-info__info").Select(t => t.InnerText.Trim()));
+                var value = div.GetByFilter("div", "book-about-info__info").Select(t => t.InnerText.Trim()).StrJoin(", ");
                 
                 if (!string.IsNullOrEmpty(name) && name.Contains("библиографическое описание")) {
                     book.Bib = value;

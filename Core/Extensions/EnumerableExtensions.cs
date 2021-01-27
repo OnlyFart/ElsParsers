@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Book.Comparer.Logic.Extensions {
+namespace Core.Extensions {
     public static class EnumerableExtensions {
         public static IEnumerable<IEnumerable<T>> AllPermutations<T>(this IEnumerable<T> source) {
             return Permutations(source.ToArray());
@@ -18,6 +18,10 @@ namespace Book.Comparer.Logic.Extensions {
                     }
                 }
             }
+        }
+
+        public static string StrJoin<T>(this IEnumerable<T> collection, string separator) {
+            return collection == null ? string.Empty : string.Join(separator, collection);
         }
 
         public static bool IsNullOrEmpty<T>(this ICollection<T> collection) {

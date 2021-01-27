@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Book.Comparer.Logic.Extensions;
 using Book.Comparer.Logic.Utils;
+using Core.Extensions;
 using Core.Types;
 
 namespace Book.Comparer.Logic.Types {
