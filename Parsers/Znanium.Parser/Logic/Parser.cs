@@ -27,8 +27,8 @@ namespace Znanium.Parser.Logic {
             var getPageBlock = new TransformBlock<Uri, SitemapFile>(async url => await GetLinksSitemaps(client, url));
             getPageBlock.CompleteMessage(_logger, "Обход карт сайта успешно завершен. Ждем получения всех книг.");
             
-            var filterBlock = new TransformManyBlock<SitemapFile, long>(sitemap => Filter(sitemap, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
-            var getBookBlock = new TransformBlock<long, BookInfo>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
+            var filterBlock = new TransformManyBlock<SitemapFile, long>(sitemap => Filter(sitemap, processed));
+            var getBookBlock = new TransformBlock<long, BookInfo>(async book => await GetBook(client, book), GetParserOptions());
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);

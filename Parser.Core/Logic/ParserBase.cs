@@ -33,6 +33,10 @@ namespace Parser.Core.Logic {
 
         protected abstract Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed);
 
+        protected ExecutionDataflowBlockOptions GetParserOptions() {
+            return new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false };
+        }
+
         /// <summary>
         /// Загрузка полученных книг из библиотеки
         /// </summary>

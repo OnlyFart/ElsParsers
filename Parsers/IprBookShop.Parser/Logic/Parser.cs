@@ -31,8 +31,8 @@ namespace IprBookShop.Parser.Logic {
             var getPageBlock = new TransformBlock<int, SearchResponseData>(async page => await GetSearchResponse(client, page));
             getPageBlock.CompleteMessage(_logger, "Обход всех страниц успешно завершен. Ждем получения всех книг.");
             
-            var filterBlock = new TransformManyBlock<SearchResponseData, SearchData>(page => page.Data.Where(t => processed.Add(t.Id.ToString())), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
-            var getBookBlock = new TransformBlock<SearchData, BookInfo>(async book => await GetBook(client, book.Id), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
+            var filterBlock = new TransformManyBlock<SearchResponseData, SearchData>(page => page.Data.Where(t => processed.Add(t.Id.ToString())));
+            var getBookBlock = new TransformBlock<SearchData, BookInfo>(async book => await GetBook(client, book.Id), GetParserOptions());
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);

@@ -31,8 +31,8 @@ namespace LanBook.Parser.Logic {
             var getPageBlock = new TransformBlock<int, ApiResponse<BooksShortBody>>(async page => await GetSearchResponse(client, page));
             getPageBlock.CompleteMessage(_logger, "Обход всего каталога успешно завершен. Ждем получения всех книг.");
             
-            var filterBlock = new TransformManyBlock<ApiResponse<BooksShortBody>, BookShort>(apiResponse => Filter(apiResponse, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
-            var getBookBlock = new TransformBlock<BookShort, BookInfo>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
+            var filterBlock = new TransformManyBlock<ApiResponse<BooksShortBody>, BookShort>(apiResponse => Filter(apiResponse, processed));
+            var getBookBlock = new TransformBlock<BookShort, BookInfo>(async book => await GetBook(client, book), GetParserOptions());
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);

@@ -24,10 +24,10 @@ namespace Urait.Parser.Logic {
         }
         
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
-            var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(uris => Filter(uris, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
+            var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(uris => Filter(uris, processed));
             filterBlock.CompleteMessage(_logger, "Получение всех ссылок на книги успешно завершено. Ждем загрузки всех книг.");
             
-            var getBookBlock = new TransformBlock<Uri, BookInfo>(async book => await GetBook(client, book), new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false});
+            var getBookBlock = new TransformBlock<Uri, BookInfo>(async book => await GetBook(client, book), GetParserOptions());
             getBookBlock.CompleteMessage(_logger, "Загрузка всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);

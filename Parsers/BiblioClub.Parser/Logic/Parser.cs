@@ -29,9 +29,9 @@ namespace BiblioClub.Parser.Logic {
             var getPageBlock = new TransformBlock<long[], IEnumerable<BookShortInfo>>(async ids => await GetShortInfo(client, _apiUrl, ids));
             getPageBlock.CompleteMessage(_logger, "Получение краткой информации по всем книгам завершено. Ждем получения библиографического описания.");
             
-            var filterBlock = new TransformManyBlock<IEnumerable<BookShortInfo>, BookShortInfo>(shortInfos => Filter(shortInfos, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
+            var filterBlock = new TransformManyBlock<IEnumerable<BookShortInfo>, BookShortInfo>(shortInfos => Filter(shortInfos, processed));
             var batchBlock2 = new BatchBlock<BookShortInfo>(50);
-            var getBibBlock = new TransformManyBlock<BookShortInfo[], BookInfo>(async books => await GetBib(client, books), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false });
+            var getBibBlock = new TransformManyBlock<BookShortInfo[], BookInfo>(async books => await GetBib(client, books), GetParserOptions());
             getBibBlock.CompleteMessage(_logger, "Получения библиографического описания по всем книгам завершено. Ждем сохранения.");
             
             var batchBlock3 = new BatchBlock<BookInfo>(_config.BatchSize);
