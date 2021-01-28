@@ -43,12 +43,6 @@ namespace Urait.Parser.Logic {
             return new IDataflowBlock[] {filterBlock, getBookBlock, batchBlock, saveBookBlock};
         }
 
-        /// <summary>
-        /// Даже не пытался сделать этот метод понятным
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="uri"></param>
-        /// <returns></returns>
         private async Task<BookInfo> GetBook(HttpClient client, Uri uri) {
             var content = await client.GetStringWithTriesAsync(uri);
             if (string.IsNullOrEmpty(content)) {

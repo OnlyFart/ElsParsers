@@ -47,12 +47,6 @@ namespace Znanium.Parser.Logic {
             return new IDataflowBlock[]{getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
         }
 
-        /// <summary>
-        /// Даже не пытался сделать этот метод понятным
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
             var content = await client.GetStringWithTriesAsync(new Uri($"https://znanium.com/catalog/document?id={id}"));
             if (string.IsNullOrEmpty(content)) {

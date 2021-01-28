@@ -60,12 +60,6 @@ namespace IprBookShop.Parser.Logic {
             return string.IsNullOrEmpty(str) ? string.Empty : Regex.Replace(str, @"\s+", " ").Trim();
         }
 
-        /// <summary>
-        /// Даже не пытался сделать этот метод понятным
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
             var url = new Uri($"http://www.iprbookshop.ru/{id}.html");
 

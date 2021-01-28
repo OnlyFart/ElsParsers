@@ -31,8 +31,8 @@ namespace LanBook.Parser.Logic {
             var getPageBlock = new TransformBlock<int, ApiResponse<BooksShortBody>>(async page => await GetSearchResponse(client, page));
             getPageBlock.CompleteMessage(_logger, "Обход всего каталога успешно завершен. Ждем получения всех книг.");
             
-            var filterBlock = new TransformManyBlock<ApiResponse<BooksShortBody>, BookShort>(apiResponse => Filter(apiResponse, processed));
-            var getBookBlock = new TransformBlock<BookShort, BookInfo>(async book => await GetBook(client, book), GetParserOptions());
+            var filterBlock = new TransformManyBlock<ApiResponse<BooksShortBody>, long>(apiResponse => Filter(apiResponse, processed));
+            var getBookBlock = new TransformBlock<long, BookInfo>(async id => await GetBook(client, id), GetParserOptions());
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
@@ -56,37 +56,28 @@ namespace LanBook.Parser.Logic {
             return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
         }
 
-        private static IEnumerable<BookShort> Filter(ApiResponse<BooksShortBody> response, ISet<string> processed) {
+        private static IEnumerable<long> Filter(ApiResponse<BooksShortBody> response, ISet<string> processed) {
             if (response == default) {
-                return Enumerable.Empty<BookShort>();
+                return Enumerable.Empty<long>();
             }
             
             var books = response.Body.Items.Where(t => processed.Add(t.Id.ToString()));
             var extra = response.Body.Extra.Where(t => processed.Add(t.Id.ToString()));
-            return books.Union(extra);
+            return books.Union(extra).Select(t => t.Id);
         }
 
-        /// <summary>
-        /// Даже не пытался сделать этот метод понятным
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="bookShort"></param>
-        /// <returns></returns>
-        private async Task<BookInfo> GetBook(HttpClient client, BookShort bookShort) {
-            if (bookShort == default) {
-                return default;
-            }
+        private async Task<BookInfo> GetBook(HttpClient client, long id) {
+            var content = await client.GetStringWithTriesAsync(new Uri($"https://e.lanbook.com/api/v2/catalog/book/{id}"));
+            var bookExtend = JsonConvert.DeserializeObject<ApiResponse<BookExtend>>(content).Body;
             
-            var content = await client.GetStringWithTriesAsync(new Uri($"https://e.lanbook.com/api/v2/catalog/book/{bookShort.Id}"));
-            var bookExtend = JsonConvert.DeserializeObject<ApiResponse<BookExtend>>(content);
-            return string.IsNullOrEmpty(content) ? default : new BookInfo(bookShort.Id.ToString(), ElsName) {
-                Authors = bookExtend.Body.Authors,
-                Bib = bookExtend.Body.BiblioRecord,
-                ISBN = bookExtend.Body.ISBN,
-                Name = bookExtend.Body.Name,
-                Pages = bookExtend.Body.Pages ?? 0,
-                Publisher = bookExtend.Body.PublisherName,
-                Year = bookExtend.Body.Year?.ToString() ?? string.Empty
+            return string.IsNullOrEmpty(content) ? default : new BookInfo(id.ToString(), ElsName) {
+                Authors = bookExtend.Authors,
+                Bib = bookExtend.BiblioRecord,
+                ISBN = bookExtend.ISBN,
+                Name = bookExtend.Name,
+                Pages = bookExtend.Pages ?? 0,
+                Publisher = bookExtend.PublisherName,
+                Year = bookExtend.Year?.ToString() ?? string.Empty
             };
         }
 
