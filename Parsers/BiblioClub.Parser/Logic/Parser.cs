@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using BiblioClub.Parser.Configs;
-using BiblioClub.Parser.Types.API;
+using BiblioClub.Parser.Types;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;
@@ -26,12 +26,12 @@ namespace BiblioClub.Parser.Logic {
 
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var batchBlock1 = new BatchBlock<long>(1000);
-            var getPageBlock = new TransformBlock<long[], IEnumerable<ShortInfo>>(async ids => await GetShortInfo(client, _apiUrl, ids));
+            var getPageBlock = new TransformBlock<long[], IEnumerable<BookShortInfo>>(async ids => await GetShortInfo(client, _apiUrl, ids));
             getPageBlock.CompleteMessage(_logger, "Получение краткой информации по всем книгам завершено. Ждем получения библиографического описания.");
             
-            var filterBlock = new TransformManyBlock<IEnumerable<ShortInfo>, ShortInfo>(shortInfos => Filter(shortInfos, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
-            var batchBlock2 = new BatchBlock<ShortInfo>(50);
-            var getBibBlock = new TransformManyBlock<ShortInfo[], BookInfo>(async books => await GetBib(client, books), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false });
+            var filterBlock = new TransformManyBlock<IEnumerable<BookShortInfo>, BookShortInfo>(shortInfos => Filter(shortInfos, processed), new ExecutionDataflowBlockOptions{MaxDegreeOfParallelism = 1});
+            var batchBlock2 = new BatchBlock<BookShortInfo>(50);
+            var getBibBlock = new TransformManyBlock<BookShortInfo[], BookInfo>(async books => await GetBib(client, books), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _config.MaxThread, EnsureOrdered = false });
             getBibBlock.CompleteMessage(_logger, "Получения библиографического описания по всем книгам завершено. Ждем сохранения.");
             
             var batchBlock3 = new BatchBlock<BookInfo>(_config.BatchSize);
@@ -52,11 +52,11 @@ namespace BiblioClub.Parser.Logic {
             return new IDataflowBlock[] {batchBlock1, getPageBlock, filterBlock, batchBlock2, getBibBlock, batchBlock3, saveBookBlock};
         }
 
-        private static IEnumerable<ShortInfo> Filter(IEnumerable<ShortInfo> shortInfos, ISet<string> processed) {
+        private static IEnumerable<BookShortInfo> Filter(IEnumerable<BookShortInfo> shortInfos, ISet<string> processed) {
             return shortInfos?.Where(shortInfo => processed.Add(shortInfo.Id.ToString()));
         }
 
-        private static async Task<IEnumerable<ShortInfo>> GetShortInfo(HttpClient client, Uri url, IEnumerable<long> ids) {
+        private static async Task<IEnumerable<BookShortInfo>> GetShortInfo(HttpClient client, Uri url, IEnumerable<long> ids) {
             var pairs = new List<KeyValuePair<string, string>> {
                 new KeyValuePair<string, string>("books_sort", "1"),
             };
@@ -65,11 +65,11 @@ namespace BiblioClub.Parser.Logic {
 
             var dataContent = new FormUrlEncodedContent(pairs.ToArray());
             var content = await client.PostWithTriesAsync(url, dataContent);
-            return string.IsNullOrEmpty(content) ? new ShortInfo[]{} : JsonConvert.DeserializeObject<IEnumerable<ShortInfo>>(content);
+            return string.IsNullOrEmpty(content) ? new BookShortInfo[]{} : JsonConvert.DeserializeObject<IEnumerable<BookShortInfo>>(content);
         }
         
 
-        private async Task<IEnumerable<BookInfo>> GetBib(HttpClient client, ShortInfo[] shortInfos) {
+        private async Task<IEnumerable<BookInfo>> GetBib(HttpClient client, BookShortInfo[] shortInfos) {
             if (shortInfos == default) {
                 return Enumerable.Empty<BookInfo>();
             }

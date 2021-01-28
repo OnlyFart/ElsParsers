@@ -1,7 +1,8 @@
 using CommandLine;
+using Core.Configs;
 
 namespace Parser.Core.Configs {
-    public abstract class OptionsBase {
+    public abstract class OptionsBase : IMongoConfig {
         [Option("th", Required = false, HelpText = "Максимальное число потоков для обращения к сервису", Default = 1)]
         public int MaxThread { get; set; }
         
