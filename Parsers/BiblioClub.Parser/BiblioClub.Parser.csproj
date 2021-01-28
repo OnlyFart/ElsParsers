@@ -12,12 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="NLog.config">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\..\Core\Core.csproj" />
       <ProjectReference Include="..\..\Parser.Core\Parser.Core.csproj" />
     </ItemGroup>

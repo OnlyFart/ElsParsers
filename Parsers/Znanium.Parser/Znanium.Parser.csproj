@@ -8,12 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Update="NLog.config">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="TurnerSoftware.SitemapTools" Version="0.6.0" />
     </ItemGroup>
 

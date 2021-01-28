@@ -56,10 +56,12 @@ namespace BiblioClub.Parser.Logic {
             return shortInfos?.Where(shortInfo => processed.Add(shortInfo.Id.ToString()));
         }
 
-        private static async Task<IEnumerable<BookShortInfo>> GetShortInfo(HttpClient client, Uri url, IEnumerable<long> ids) {
+        private static async Task<IEnumerable<BookShortInfo>> GetShortInfo(HttpClient client, Uri url, ICollection<long> ids) {
             var pairs = new List<KeyValuePair<string, string>> {
                 new KeyValuePair<string, string>("books_sort", "1"),
             };
+            
+            _logger.Info($"Запрашиваем книги с индексами [{ids.Min()}, {ids.Max()}]");
             
             pairs.AddRange(ids.Select(id => new KeyValuePair<string, string>("books_ids[]", id.ToString())));
 
