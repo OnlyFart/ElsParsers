@@ -29,6 +29,7 @@ uraitparser --help
 * [Лань](https://lanbook.com/)
 * [Znarium](https://znanium.com/)
 * [Biblioclub](https://biblioclub.ru/)
+* [Академия] (https://academia-moscow.ru/)
 
 Для работы каждого из парсеров необходима база данных [MongoDb](https://www.mongodb.com/), где каждым из парсером будет создана своя коллекция с книгами.
 При повторном запуске парсера будут дособраны книги, которые отсутствуют на текущий момент в базе
