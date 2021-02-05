@@ -1,5 +1,4 @@
 using CommandLine;
-using Core.Configs;
 using Parser.Core.Configs;
 
 namespace BiblioClub.Parser.Configs {
