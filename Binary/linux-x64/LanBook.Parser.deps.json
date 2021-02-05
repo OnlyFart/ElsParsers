@@ -9,7 +9,6 @@
     ".NETCoreApp,Version=v3.1/linux-x64": {
       "LanBook.Parser/1.0.0": {
         "dependencies": {
-          "Core": "1.0.0",
           "Newtonsoft.Json": "12.0.3",
           "Parser.Core": "1.0.0",
           "runtimepack.Microsoft.NETCore.App.Runtime.linux-x64": "3.0.0"

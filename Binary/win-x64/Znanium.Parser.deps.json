@@ -9,7 +9,6 @@
     ".NETCoreApp,Version=v3.1/win-x64": {
       "Znanium.Parser/1.0.0": {
         "dependencies": {
-          "Core": "1.0.0",
           "Parser.Core": "1.0.0",
           "TurnerSoftware.SitemapTools": "0.6.0",
           "runtimepack.Microsoft.NETCore.App.Runtime.win-x64": "3.0.0"

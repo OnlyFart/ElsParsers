@@ -12,8 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Core\Core.csproj" />
-      <ProjectReference Include="..\..\Parser.Core\Parser.Core.csproj" />
+      <ProjectReference Include="..\..\Common\Parser.Core\Parser.Core.csproj" />
     </ItemGroup>
 
 </Project>
