@@ -22,41 +22,40 @@ namespace AcademiaMoscow.Parser.Logic {
         protected override string ElsName => "AcademiaMoscow";
 
         private async Task<BookInfo> GetBook(Uri url, HttpClient client) {
-            Console.WriteLine($"Получаем книгу {url}");
+            _logger.Info($"Получаем книгу {url}");
             var content = await client.GetStringWithTriesAsync(url);
+            if (string.IsNullOrWhiteSpace(content)) {
+                return null;
+            }
             var doc = new HtmlDocument();
             doc.LoadHtml(content);
-
-            var id = doc.DocumentNode.SelectSingleNode("//input[@name='id']")?.InnerHtml;
+            var id = url.Segments.Last().Split("/").First();;
             var detailedDescriptionBlock = doc.DocumentNode.GetByFilterFirst("div", "detailed-description");
             var authorInfoBlock = doc.DocumentNode.GetByFilterFirst("div", "author-book");
-
             var book = new BookInfo(id, ElsName) {
-                ISBN = detailedDescriptionBlock.ChildNodes.FirstOrDefault(x => x.InnerHtml.Contains("ISBN издания:"))
-                    ?.InnerText.Split(':')[1]
-                    .Trim(),
-                Name = doc.DocumentNode.Descendants("h1")
-                    .FirstOrDefault()
-                    ?.InnerText,
-                Year = detailedDescriptionBlock.ChildNodes.FirstOrDefault(x => x.InnerHtml.Contains("Год выпуска:"))
-                    ?.InnerText.Split(':')[1]
-                    .Trim(),
-                Pages = Int32.Parse(detailedDescriptionBlock.ChildNodes.FirstOrDefault(x => x.InnerHtml.Contains("Объем:"))
-                    ?.InnerText.Split(':')[1]
-                    .Trim() ?? "0")
+                Name = doc.DocumentNode.Descendants("h1").FirstOrDefault()?.InnerText,
+                Authors = authorInfoBlock.ChildNodes.Where(node => node.Name == "a").Select(node => node.InnerText.Trim()).Where(text => !string.IsNullOrWhiteSpace(text)).StrJoin(", ")
             };
-            var authors = string.Empty;
-            foreach (var author in authorInfoBlock.ChildNodes) {
-                authors += author.InnerText;
+            foreach (var node in detailedDescriptionBlock.ChildNodes) {
+                var nameBlock = node.GetByFilterFirst("span", "bold-text");
+                if (nameBlock == null) {
+                    continue;
+                }
+                var name = nameBlock.InnerText;
+                var value = nameBlock.NextSibling.InnerText.Trim();
+                if (name.Contains("ISBN")) {
+                    book.ISBN = value;
+                } else if (name.Contains("Год")) {
+                    book.Year = value;
+                } else if (name.Contains("Объем")) {
+                    int.TryParse(value, out book.Pages);
+                }
             }
-
-            book.Authors = authors;
-
             return book;
         }
 
         private async Task<IEnumerable<Uri>> GetBooksFromPage(HttpClient client, string url) {
-            Console.WriteLine($"Получаем данные для {url}");
+            _logger.Info($"Получаем данные для {url}");
             Uri uri = new Uri(url);
             var content = await client.GetStringWithTriesAsync(uri);
             var urls = new List<Uri>();
@@ -93,7 +92,7 @@ namespace AcademiaMoscow.Parser.Logic {
                 return 1;
             }
 
-            return int.Parse(pageList.ChildNodes.Last(x => !string.IsNullOrEmpty(x.InnerText) && x.InnerText != "\n" && x.InnerHtml != "\n\t\t")?.InnerText ?? "1");
+            return pageList.ChildNodes.Select(node => int.TryParse(node.InnerText, out var page) ? page : 1).Max();
         }
     
         private static IEnumerable<Uri> Filter(IEnumerable<Uri> uris, ISet<string> processed) {
@@ -114,7 +113,8 @@ namespace AcademiaMoscow.Parser.Logic {
             var saveBookBlock = new ActionBlock<BookInfo[]>(async books => {
                     await _provider.CreateMany(books); }
             );
-
+            getBookBlock.CompleteMessage(_logger, "Загрузка всех книг завершено. Ждем сохранения.");
+            
             getPageBlock.LinkTo(filterBlock);
             filterBlock.LinkTo(getBookBlock);
             getBookBlock.LinkTo(batchBlock);
