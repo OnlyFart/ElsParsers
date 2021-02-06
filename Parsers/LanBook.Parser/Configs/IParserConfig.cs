@@ -1,7 +1,5 @@
-using Parser.Core.Configs;
-
 namespace LanBook.Parser.Configs {
-    public interface IParserConfig : IParserConfigBase {
+    public interface IParserConfig {
         int StartPage { get; set; }
     }
 }
