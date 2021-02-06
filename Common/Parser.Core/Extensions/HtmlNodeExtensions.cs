@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using HtmlAgilityPack;
 
-namespace Core.Extensions {
+namespace Parser.Core.Extensions {
     /// <summary>
-    /// 
+    /// Расширения для работы с HtmlNode
     /// </summary>
     public static class HtmlNodeExtensions {
         public static HtmlNode GetByFilterFirst(this HtmlNode node, string name, string className) {

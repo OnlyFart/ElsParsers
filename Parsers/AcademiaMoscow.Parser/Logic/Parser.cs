@@ -7,7 +7,6 @@ using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;
-using HtmlAgilityPack;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
@@ -22,14 +21,11 @@ namespace AcademiaMoscow.Parser.Logic {
 
         private async Task<BookInfo> GetBook(HttpClient client, Uri uri) {
             _logger.Info($"Получаем книгу {uri}");
-            var content = await client.GetStringWithTriesAsync(uri);
-            if (string.IsNullOrWhiteSpace(content)) {
-                return null;
+            var doc = await client.GetHtmlDoc(uri);
+            if (doc == default) {
+                return default;
             }
-            
-            var doc = new HtmlDocument();
-            doc.LoadHtml(content);
-            
+
             var detailedDescriptionBlock = doc.DocumentNode.GetByFilterFirst("div", "detailed-description");
             var authorInfoBlock = doc.DocumentNode.GetByFilterFirst("div", "author-book");
             
@@ -62,29 +58,17 @@ namespace AcademiaMoscow.Parser.Logic {
         private static async Task<IEnumerable<Uri>> GetBookLinks(HttpClient client, Uri uri) {
             _logger.Info($"Получаем данные для {uri}");
 
-            var content = await client.GetStringWithTriesAsync(uri);
-
-            if (string.IsNullOrEmpty(content)) {
-                return Enumerable.Empty<Uri>();
-            }
-            
-            var doc = new HtmlDocument();
-            doc.LoadHtml(content);
-
-            return doc.DocumentNode.GetByFilter("div", "title-book").Select(div => div.GetByFilterFirst("a")?.Attributes["href"]?.Value).Select(href => new Uri(uri, href));
+            var doc = await client.GetHtmlDoc(uri);
+            return doc == default ? 
+                Enumerable.Empty<Uri>() : 
+                doc.DocumentNode.GetByFilter("div", "title-book").Select(div => div.GetByFilterFirst("a")?.Attributes["href"]?.Value).Select(href => new Uri(uri, href));
         }
 
         private static async Task<int> GetMaxPageCount(HttpClient client, Uri uri) {
-            var content = await client.GetStringWithTriesAsync(uri);
-           
-            if (string.IsNullOrEmpty(content)) {
-                return 1;
-            }
-
-            var doc = new HtmlDocument();
-            doc.LoadHtml(content);
-            
-            return doc.DocumentNode.GetByFilterFirst("ul", "pagination")?.ChildNodes.Select(node => int.TryParse(node.InnerText, out var page) ? page : 1).Max() ?? 1;
+            var doc = await client.GetHtmlDoc(uri);
+            return doc == default ? 
+                1 : 
+                doc.DocumentNode.GetByFilterFirst("ul", "pagination")?.ChildNodes.Select(node => int.TryParse(node.InnerText, out var page) ? page : 1).Max() ?? 1;
         }
     
         private static IEnumerable<Uri> Filter(IEnumerable<Uri> uris, ISet<string> processed) {

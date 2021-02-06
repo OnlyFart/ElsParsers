@@ -7,7 +7,6 @@ using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;
-using HtmlAgilityPack;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
@@ -50,31 +49,21 @@ namespace IBooks.Parser.Logic {
         }
         
         private static async Task<int> GetMaxPageCount(HttpClient client, Uri uri) {
-            var content = await client.GetStringWithTriesAsync(uri);
-           
-            if (string.IsNullOrEmpty(content)) {
-                return 1;
-            }
-
-            var doc = new HtmlDocument();
-            doc.LoadHtml(content);
-            
-            return doc.DocumentNode.GetByFilterFirst("div", "pagination")?.ChildNodes.Select(node => int.TryParse(node.InnerText, out var page) ? page : 1).Max() ?? 1;
+            var doc = await client.GetHtmlDoc(uri);
+            return doc == default ? 
+                1 : 
+                doc.DocumentNode.GetByFilterFirst("div", "pagination")?.ChildNodes.Select(node => int.TryParse(node.InnerText, out var page) ? page : 1).Max() ?? 1;
         }
 
         private async Task<IEnumerable<BookInfo>> GetBooks(HttpClient client, int page) {
-            var url = GetUrl(page);
+            var uri = GetUrl(page);
             
-            _logger.Info($"Загружаем страницу {url}");
+            _logger.Info($"Загружаем страницу {uri}");
             
-            var content = await client.GetStringWithTriesAsync(url);
-           
-            if (string.IsNullOrEmpty(content)) {
+            var doc = await client.GetHtmlDoc(uri);
+            if (doc == default) {
                 return Enumerable.Empty<BookInfo>();
             }
-
-            var doc = new HtmlDocument();
-            doc.LoadHtml(content);
 
             var descriptionBlocks = doc.DocumentNode.GetByFilter("div", "product__descr");
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -9,7 +10,6 @@ using System.Web;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;
-using HtmlAgilityPack;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
@@ -18,7 +18,7 @@ using TurnerSoftware.SitemapTools.Parser;
 
 namespace Znanium.Parser.Logic {
     public class Parser : ParserBase {
-        protected override string ElsName => "Znarium";
+        protected override string ElsName => "Znanium";
 
         public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) {
         }
@@ -48,13 +48,10 @@ namespace Znanium.Parser.Logic {
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
-            var content = await client.GetStringWithTriesAsync(new Uri($"https://znanium.com/catalog/document?id={id}"));
-            if (string.IsNullOrEmpty(content)) {
+            var doc = await client.GetHtmlDoc(new Uri($"https://znanium.com/catalog/document?id={id}"));
+            if (doc == default) {
                 return default;
             }
-            
-            var doc = new HtmlDocument();
-            doc.LoadHtml(content);
             
             var bookContent = doc.DocumentNode.GetByFilterFirst("div", "book-content");
             var bookInfoBlock = bookContent.GetByFilterFirst("div", "desktop-book-header");
@@ -97,9 +94,7 @@ namespace Znanium.Parser.Logic {
 
         private static IEnumerable<long> Filter(SitemapFile sitemap, ISet<string> processed) {
             foreach (var uri in sitemap.Urls) {
-                var pars = HttpUtility.ParseQueryString(uri.Location.Query);
-
-                var idStr = pars.Get("id");
+                var idStr = HttpUtility.ParseQueryString(uri.Location.Query).Get("id");
                 if (long.TryParse(idStr, out var id) && processed.Add(id.ToString())) {
                     yield return id;
                 }

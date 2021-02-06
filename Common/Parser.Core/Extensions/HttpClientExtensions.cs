@@ -2,6 +2,8 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
+using Newtonsoft.Json;
 using NLog;
 using Parser.Core.Configs;
 
@@ -30,7 +32,7 @@ namespace Parser.Core.Extensions {
             
             return httpClient;
         }
-        
+
         public static async Task<string> GetStringWithTriesAsync(this HttpClient client, Uri url) {
             for (var i = 0; i < MAX_TRY_COUNT; i++) {
                 try {
@@ -75,6 +77,25 @@ namespace Parser.Core.Extensions {
             }
 
             return default;
+        }
+        
+        public static async Task<T> GetJson<T>(this HttpClient client, Uri uri) {
+            var content = await client.GetStringWithTriesAsync(uri);
+
+            return string.IsNullOrWhiteSpace(content) ? default : JsonConvert.DeserializeObject<T>(content);
+        }
+
+        public static async Task<HtmlDocument> GetHtmlDoc(this HttpClient client, Uri uri) {
+            var content = await client.GetStringWithTriesAsync(uri);
+
+            if (string.IsNullOrWhiteSpace(content)) {
+                return default;
+            }
+            
+            var doc = new HtmlDocument();
+            doc.LoadHtml(content);
+
+            return doc;
         }
     }
 }

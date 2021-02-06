@@ -61,12 +61,10 @@ namespace IprBookShop.Parser.Logic {
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
-            var url = new Uri($"http://www.iprbookshop.ru/{id}.html");
-
-            var content = await client.GetStringWithTriesAsync(url);
-
-            var doc = new HtmlDocument();
-            doc.LoadHtml(content);
+            var doc = await client.GetHtmlDoc(new Uri($"http://www.iprbookshop.ru/{id}.html"));
+            if (doc == default) {
+                return default;
+            }
 
             var bookInfoBlock = doc.DocumentNode.GetByFilterFirst("div", "book-information");
 

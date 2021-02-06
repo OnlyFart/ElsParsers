@@ -76,12 +76,11 @@ namespace BiblioClub.Parser.Logic {
                 return Enumerable.Empty<BookInfo>();
             }
             
-            var resp = await client.GetStringWithTriesAsync(new Uri("https://biblioclub.ru/index.php?action=blocks&list=" + shortInfos.Select(s => "biblio:" + s.Id).StrJoin(",")));
-            if (string.IsNullOrEmpty(resp)) {
+            var dict = await client.GetJson<Dictionary<string, string>>(new Uri("https://biblioclub.ru/index.php?action=blocks&list=" + shortInfos.Select(s => "biblio:" + s.Id).StrJoin(",")));
+            if (dict == default) {
                 return Enumerable.Empty<BookInfo>();
             }
             
-            var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(resp);
             return shortInfos.Select(shortInfo => new BookInfo(shortInfo.Id.ToString(), ElsName) {
                 Authors = shortInfo.Author,
                 Bib = dict["biblio:" + shortInfo.Id],

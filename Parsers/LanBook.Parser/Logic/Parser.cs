@@ -11,7 +11,6 @@ using LanBook.Parser.Configs;
 using LanBook.Parser.Types.API;
 using LanBook.Parser.Types.API.BooksExtend;
 using LanBook.Parser.Types.API.BooksShort;
-using Newtonsoft.Json;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
@@ -67,10 +66,14 @@ namespace LanBook.Parser.Logic {
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
-            var content = await client.GetStringWithTriesAsync(new Uri($"https://e.lanbook.com/api/v2/catalog/book/{id}"));
-            var bookExtend = JsonConvert.DeserializeObject<ApiResponse<BookExtend>>(content).Body;
+            var content = await client.GetJson<ApiResponse<BookExtend>>(new Uri($"https://e.lanbook.com/api/v2/catalog/book/{id}"));
+            if (content == default) {
+                return default;
+            }
             
-            return string.IsNullOrEmpty(content) ? default : new BookInfo(id.ToString(), ElsName) {
+            var bookExtend = content.Body;
+            
+            return new BookInfo(id.ToString(), ElsName) {
                 Authors = bookExtend.Authors,
                 Bib = bookExtend.BiblioRecord,
                 ISBN = bookExtend.ISBN,
@@ -90,8 +93,7 @@ namespace LanBook.Parser.Logic {
         private static async Task<ApiResponse<BooksShortBody>> GetSearchResponse(HttpClient client, int page) {
             _logger.Info($"Запрашиваем страницу {page}");
             
-            var response = await client.GetStringWithTriesAsync(new Uri(string.Format(_allBooksUrlPattern, page)));
-            return string.IsNullOrEmpty(response) ? default : JsonConvert.DeserializeObject<ApiResponse<BooksShortBody>>(response);
+            return await client.GetJson<ApiResponse<BooksShortBody>>(new Uri(string.Format(_allBooksUrlPattern, page)));
         }
     }
 }

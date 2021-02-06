@@ -9,7 +9,6 @@ using System.Threading.Tasks.Dataflow;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;
-using HtmlAgilityPack;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
@@ -44,13 +43,10 @@ namespace Urait.Parser.Logic {
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, Uri uri) {
-            var content = await client.GetStringWithTriesAsync(uri);
-            if (string.IsNullOrEmpty(content)) {
+            var doc = await client.GetHtmlDoc(uri);
+            if (doc == default) {
                 return default;
             }
-            
-            var doc = new HtmlDocument();
-            doc.LoadHtml(content);
 
             var book = new BookInfo(uri.Segments.Last().Split("-").Last(), ElsName) {
                 Name = doc.DocumentNode.GetByFilterFirst("h1", "book_title")?.InnerText.Trim(), 

@@ -27,7 +27,7 @@ namespace Core.Providers.Implementations {
             
             var listAsync = await _collection.Find(filter).Project(projection).ToListAsync();
             
-            _logger.Info($"Загружено {listAsync.Count} записей");
+            _logger.Info($"Из {_config.DatabaseName}/{_config.CollectionName} {listAsync.Count} записей");
             
             return listAsync;
         }
