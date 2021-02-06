@@ -7,14 +7,13 @@
   "targets": {
     ".NETCoreApp,Version=v3.1": {},
     ".NETCoreApp,Version=v3.1/linux-x64": {
-      "BiblioClub.Parser/1.0.0": {
+      "IBooks.Parser/1.0.0": {
         "dependencies": {
-          "Newtonsoft.Json": "12.0.3",
           "Parser.Core": "1.0.0",
           "runtimepack.Microsoft.NETCore.App.Runtime.linux-x64": "3.0.0"
         },
         "runtime": {
-          "BiblioClub.Parser.dll": {}
+          "IBooks.Parser.dll": {}
         }
       },
       "runtimepack.Microsoft.NETCore.App.Runtime.linux-x64/3.0.0": {
@@ -873,14 +872,6 @@
           "System.Threading.Timer": "4.3.0",
           "System.Xml.ReaderWriter": "4.3.0",
           "System.Xml.XDocument": "4.3.0"
-        }
-      },
-      "Newtonsoft.Json/12.0.3": {
-        "runtime": {
-          "lib/netstandard2.0/Newtonsoft.Json.dll": {
-            "assemblyVersion": "12.0.0.0",
-            "fileVersion": "12.0.3.23909"
-          }
         }
       },
       "Ninject/3.3.4": {
@@ -1754,7 +1745,7 @@
     }
   },
   "libraries": {
-    "BiblioClub.Parser/1.0.0": {
+    "IBooks.Parser/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -1840,13 +1831,6 @@
       "sha512": "sha512-WcSp3+vP+yHNgS8EV5J7pZ9IRpeDuARBPN28by8zqff1wJQXm26PVU8L3/fYLBJVU7BtDyqNVWq2KlCVvSSR4A==",
       "path": "netstandard.library/1.6.1",
       "hashPath": "netstandard.library.1.6.1.nupkg.sha512"
-    },
-    "Newtonsoft.Json/12.0.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-6mgjfnRB4jKMlzHSl+VD+oUc1IebOZabkbyWj2RiTgWwYPPuaK1H97G1sHqGwPlS5npiF5Q0OrxN1wni2n5QWg==",
-      "path": "newtonsoft.json/12.0.3",
-      "hashPath": "newtonsoft.json.12.0.3.nupkg.sha512"
     },
     "Ninject/3.3.4": {
       "type": "package",
