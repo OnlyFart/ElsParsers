@@ -12,7 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Common\Core\Core.csproj" />
       <ProjectReference Include="..\..\Common\Parser.Core\Parser.Core.csproj" />
     </ItemGroup>
 

@@ -14,11 +14,11 @@ using Parser.Core.Logic;
 
 namespace IBooks.Parser.Logic {
     public class Parser : ParserBase {
-        private const string CATALOG_URL = "https://ibooks.ru/products?page={0}&paging=100";
-        
         public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) { }
         
         protected override string ElsName => "IBooks";
+        
+        private static Uri GetUrl(int page) => new Uri($"https://ibooks.ru/products?page={page}&paging=100");
 
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var pagesCount = await GetMaxPageCount(client, GetUrl(1));
@@ -126,10 +126,6 @@ namespace IBooks.Parser.Logic {
             }
 
             return result;
-        }
-
-        private static Uri GetUrl(int page) {
-            return new Uri(string.Format(CATALOG_URL, page));
         }
     }
 }
