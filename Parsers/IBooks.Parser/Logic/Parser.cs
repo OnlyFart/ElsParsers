@@ -21,7 +21,7 @@ namespace IBooks.Parser.Logic {
         protected override string ElsName => "IBooks";
 
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
-            var pagesCount = GetMaxPageCount(client, GetUrl(1));
+            var pagesCount = await GetMaxPageCount(client, GetUrl(1));
             
             _logger.Info($"Всего страниц {pagesCount}");
             
@@ -38,7 +38,7 @@ namespace IBooks.Parser.Logic {
             filterBlock.LinkTo(batchBlock);
             batchBlock.LinkTo(saveBookBlock);
             
-            for (var i = 1; i <= await pagesCount; i++) {
+            for (var i = 1; i <= pagesCount; i++) {
                 await getBooksBlock.SendAsync(i);
             }
 
