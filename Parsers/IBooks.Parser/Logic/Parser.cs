@@ -110,10 +110,6 @@ namespace IBooks.Parser.Logic {
 
                 foreach (var productText in block.GetByFilter("div", "product__text")) {
                     var split = productText.InnerText.Replace("&nbsp;", string.Empty).Split(",", StringSplitOptions.RemoveEmptyEntries);
-                    if (split.Length != 3) {
-                        _logger.Info(productText.InnerText);
-                        continue;
-                    }
 
                     foreach (var elem in split) {
                         if (elem.EndsWith("г.")) {
