@@ -35,7 +35,7 @@ namespace BiblioClub.Parser.Logic {
             getBibBlock.CompleteMessage(_logger, "Получения библиографического описания по всем книгам завершено. Ждем сохранения.");
             
             var batchBlock3 = new BatchBlock<BookInfo>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await _provider.CreateMany(books));
+            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await SaveBooks(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             batchBlock1.LinkTo(getPageBlock);

@@ -14,9 +14,9 @@ using Parser.Core.Logic;
 
 namespace AcademiaMoscow.Parser.Logic {
     public class Parser : ParserBase {
-        private const string CATALOG_URL = "https://academia-moscow.ru/catalogue/4831/";
-        
         public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) { }
+        
+        private static Uri GetUrl(int page) => new Uri($"https://academia-moscow.ru/catalogue/4831/?PAGEN_1={page}");
         
         protected override string ElsName => "AcademiaMoscow";
 
@@ -59,7 +59,7 @@ namespace AcademiaMoscow.Parser.Logic {
             return book;
         }
 
-        private static async Task<IEnumerable<Uri>> GetBooksFromPage(Uri uri, HttpClient client) {
+        private static async Task<IEnumerable<Uri>> GetBookLinks(HttpClient client, Uri uri) {
             _logger.Info($"Получаем данные для {uri}");
 
             var content = await client.GetStringWithTriesAsync(uri);
@@ -97,9 +97,9 @@ namespace AcademiaMoscow.Parser.Logic {
         }
 
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
-            var pagesCount = GetMaxPageCount(client, new Uri($"{CATALOG_URL}?PAGEN_1=1"));
+            var pagesCount = GetMaxPageCount(client, GetUrl(1));
             
-            var getPageBlock = new TransformBlock<Uri, IEnumerable<Uri>>(async url => await GetBooksFromPage(url, client));
+            var getPageBlock = new TransformBlock<Uri, IEnumerable<Uri>>(async url => await GetBookLinks(client, url));
             getPageBlock.CompleteMessage(_logger, "Получение всех ссылок на книги успешно завершено. Ждем загрузки всех книг.");
             
             var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(uris => Filter(uris, processed));
@@ -108,7 +108,7 @@ namespace AcademiaMoscow.Parser.Logic {
             getBookBlock.CompleteMessage(_logger, "Загрузка всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await _provider.CreateMany(books));
+            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await SaveBooks(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранение завершено.");
             
             getPageBlock.LinkTo(filterBlock);
@@ -117,7 +117,7 @@ namespace AcademiaMoscow.Parser.Logic {
             batchBlock.LinkTo(saveBookBlock);
             
             for (var i = 1; i <= await pagesCount; i++) {
-                await getPageBlock.SendAsync(new Uri($"{CATALOG_URL}?PAGEN_1={i}"));
+                await getPageBlock.SendAsync(GetUrl(i));
             }
 
             return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};

@@ -31,7 +31,7 @@ namespace IBooks.Parser.Logic {
             var filterBlock = new TransformManyBlock<IEnumerable<BookInfo>, BookInfo>(books => Filter(books, processed));
 
             var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await _provider.CreateMany(books));
+            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await SaveBooks(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранение завершено.");
             
             getBooksBlock.LinkTo(filterBlock);

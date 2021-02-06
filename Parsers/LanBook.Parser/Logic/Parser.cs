@@ -36,7 +36,7 @@ namespace LanBook.Parser.Logic {
             getBookBlock.CompleteMessage(_logger, "Получение всех книг завершено. Ждем сохранения.");
             
             var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await _provider.CreateMany(books));
+            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await SaveBooks(books));
             saveBookBlock.CompleteMessage(_logger, "Сохранения завершено. Работа программы завершена.");
 
             getPageBlock.LinkTo(filterBlock);

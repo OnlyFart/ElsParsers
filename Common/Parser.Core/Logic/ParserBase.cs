@@ -16,7 +16,7 @@ namespace Parser.Core.Logic {
         protected static readonly Logger _logger = LogManager.GetLogger(nameof(Parser));
 
         protected readonly IParserConfigBase _config;
-        protected readonly IRepository<BookInfo> _provider;
+        private readonly IRepository<BookInfo> _provider;
         
         protected ParserBase(IParserConfigBase config, IRepository<BookInfo> provider) {
             _config = config;
@@ -41,8 +41,17 @@ namespace Parser.Core.Logic {
         /// Загрузка полученных книг из библиотеки
         /// </summary>
         /// <returns></returns>
-        protected Task<HashSet<string>> GetProcessed() {
+        private Task<HashSet<string>> GetProcessed() {
             return _provider.Read(Builders<BookInfo>.Filter.Eq(t => t.ElsName, ElsName), book => book.ExternalId).ContinueWith(t => t.Result.ToHashSet());
+        }
+
+        /// <summary>
+        /// Сохранение книг в базу
+        /// </summary>
+        /// <param name="books">Книги</param>
+        /// <returns></returns>
+        protected Task SaveBooks(IEnumerable<BookInfo> books) {
+            return _provider.CreateMany(books);
         }
     }
 }
