@@ -57,8 +57,7 @@ namespace Urait.Parser.Logic {
                 Authors = doc.DocumentNode.GetByFilterFirst("ul", "creation-info__authors")?.FirstChild?.InnerText?.Trim(), 
                 Year = doc.DocumentNode.GetByFilterFirst("div", "creation-info__year")?.InnerText?.Trim(),
             };
-
-
+            
             foreach (var div in doc.DocumentNode.GetByFilter("div", "book-about-produce__item")) {
                 var name = div.GetByFilterFirst("span", "book-about-produce__title")?.InnerText.ToLower().Trim();
                 if (string.IsNullOrEmpty(name)) {
