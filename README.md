@@ -31,6 +31,7 @@ uraitparser --help
 * [Biblioclub](https://biblioclub.ru/)
 * [Академия](https://academia-moscow.ru/)
 * [IBooks](https://ibooks.ru/)
+* [Book.ru](https://book.ru/)
 
 Для работы каждого из парсеров необходима база данных [MongoDb](https://www.mongodb.com/).
 При повторных запусках парсеров будут дособраны книги, которые отсутствуют на текущий момент в базе

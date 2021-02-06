@@ -57,18 +57,18 @@ namespace Parser.Core.Extensions {
             return default;
         }
 
-        public static async Task<string> PostWithTriesAsync(this HttpClient client, Uri url, ByteArrayContent data) {
+        public static async Task<string> PostWithTriesAsync(this HttpClient client, Uri uri, ByteArrayContent data) {
             for (var i = 0; i < MAX_TRY_COUNT; i++) {
                 try {
-                    _logger.Debug($"Post {url}.");
-                    using var response = await client.PostAsync(url, data);
+                    _logger.Debug($"Post {uri}.");
+                    using var response = await client.PostAsync(uri, data);
 
                     if (response.StatusCode != HttpStatusCode.OK) {
                         continue;
                     }
                     
                     var responseString = await response.Content.ReadAsStringAsync();
-                    _logger.Debug($"Post {url}. Response {responseString}");
+                    _logger.Debug($"Post {uri}. Response {responseString}");
                     
                     return responseString;
                 } catch (Exception e) {
@@ -81,6 +81,12 @@ namespace Parser.Core.Extensions {
         
         public static async Task<T> GetJson<T>(this HttpClient client, Uri uri) {
             var content = await client.GetStringWithTriesAsync(uri);
+
+            return string.IsNullOrWhiteSpace(content) ? default : JsonConvert.DeserializeObject<T>(content);
+        }
+        
+        public static async Task<T> PostJson<T>(this HttpClient client, Uri uri, ByteArrayContent data) {
+            var content = await client.PostWithTriesAsync(uri, data);
 
             return string.IsNullOrWhiteSpace(content) ? default : JsonConvert.DeserializeObject<T>(content);
         }

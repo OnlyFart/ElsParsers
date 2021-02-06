@@ -26,7 +26,7 @@ namespace Core.Extensions {
         /// <param name="logger"></param>
         /// <param name="message"></param>
         public static void CompleteMessage(this IDataflowBlock block, Logger logger, string message) {
-            block.Completion.ContinueWith(task => logger.Info(message)).GetAwaiter();
+            block.Completion.ContinueWith(task => logger.Info(message));
         }
     }
 }
