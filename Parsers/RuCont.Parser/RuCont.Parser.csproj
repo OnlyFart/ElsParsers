@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <RuntimeFrameworkVersion>3.0.0</RuntimeFrameworkVersion>
+        <RuntimeIdentifiers>win10-x64;linux-x64;</RuntimeIdentifiers>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Common\Parser.Core\Parser.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="TurnerSoftware.SitemapTools" Version="0.6.0" />
+    </ItemGroup>
+
+</Project>
