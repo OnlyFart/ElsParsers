@@ -24,7 +24,7 @@ namespace BookRu.Parser.Logic {
         protected override string ElsName => "BookRu";
 
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
-            var getBookIdsBlock = new TransformBlock<MenuItem, IEnumerable<string>>(async categoryId => await GetBookIds(client, categoryId), new ExecutionDataflowBlockOptions {EnsureOrdered = true});
+            var getBookIdsBlock = new TransformBlock<MenuItem, IEnumerable<string>>(async categoryId => await GetBookIds(client, categoryId));
             getBookIdsBlock.CompleteMessage(_logger, "Получение каталогов книг закончено. Ждем получения книг.");
 
             var filterBlock = new TransformManyBlock<IEnumerable<string>, string>(bookIds => Filter(bookIds, processed));
@@ -72,19 +72,17 @@ namespace BookRu.Parser.Logic {
 
         private async Task<BookInfo> GetBook(HttpClient client, string id) {
             var response = await client.GetJson<ApiResponse<Dictionary<string, BookItem>>>(new Uri($"https://www.book.ru/book/get_book/{id}"));
-            if (response?.Data == default || !response.Data.TryGetValue(id, out var book)) {
-                return default;
-            }
-
-            return new BookInfo(id, ElsName) {
-                Authors = book.Author,
-                Bib = book.Bib,
-                ISBN = book.ISBN,
-                Name = book.Name,
-                Pages = book.Pages ?? 0,
-                Year = book.Year,
-                Publisher = book.Publisher
-            };
+            return response?.Data == default || !response.Data.TryGetValue(id, out var book)
+                ? default
+                : new BookInfo(id, ElsName) {
+                    Authors = book.Author,
+                    Bib = book.Bib,
+                    ISBN = book.ISBN,
+                    Name = book.Name,
+                    Pages = book.Pages ?? 0,
+                    Year = book.Year,
+                    Publisher = book.Publisher
+                };
         }
     }
 }
