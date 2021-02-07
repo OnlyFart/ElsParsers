@@ -28,7 +28,25 @@ namespace Book.Comparer.Logic {
             _bookComparer = bookComparer;
             _comparerConfig = comparerConfig;
         }
-        
+
+        /// <summary>
+        /// Получение уникального списка потенциально похожих книг
+        /// </summary>
+        /// <param name="thisBook">Книга, для которой ищем похожие</param>
+        /// <param name="wordToBooks">Обратный индекс "слово из названия" -> "список книг"</param>
+        /// <returns></returns>
+        private static IEnumerable<CompareBook> GetOtherBooks(CompareBook thisBook, IReadOnlyDictionary<string, List<CompareBook>> wordToBooks) {
+            var set = new HashSet<CompareBook>();
+
+            foreach (var word in thisBook.Key.NameWords) {
+                if (wordToBooks.TryGetValue(word, out var otherBooks)) {
+                    foreach (var otherBook in otherBooks.Where(otherBook => set.Add(otherBook))) {
+                        yield return otherBook;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Поиск похожих книг
         /// </summary>
@@ -37,48 +55,42 @@ namespace Book.Comparer.Logic {
         /// <returns></returns>
         private SaveResult FindSimilar(CompareBook thisBook, IReadOnlyDictionary<string, List<CompareBook>> wordToBooks) {
             var result = new SaveResult {
-                Book = thisBook.BookInfo, 
+                Book = thisBook.BookInfo,
                 SimilarBooks = new HashSet<BookInfo>()
             };
-
-            foreach (var word in thisBook.Key.NameWords) {
-                if (!wordToBooks.TryGetValue(word, out var otherBooks)) {
+            
+            foreach (var otherBook in GetOtherBooks(thisBook, wordToBooks)) {
+                if (thisBook.BookInfo.Equals(otherBook.BookInfo)) {
                     continue;
                 }
 
-                foreach (var otherBook in otherBooks) {
-                    if (thisBook.BookInfo.Equals(otherBook.BookInfo)) {
-                        continue;
-                    }
-
-                    if (!thisBook.BookInfo.Similar.IsNullOrEmpty() && thisBook.BookInfo.Similar.Contains(otherBook.BookInfo)) {
-                        continue;
-                    }
-
-                    var comparerResult = _bookComparer.Compare(thisBook, otherBook);
-                    if (!comparerResult.Author.Success || !comparerResult.Name.Success) {
-                        continue;
-                    }
-
-                    thisBook.BookInfo.AddSimilar(otherBook.BookInfo, comparerResult);
-                    otherBook.BookInfo.AddSimilar(thisBook.BookInfo, comparerResult);
-                    
-                    result.SimilarBooks.Add(otherBook.BookInfo);
-                    
-                    _logger.Info($"{thisBook.BookInfo.Name} -> {thisBook.Key.Name}");
-                    _logger.Info($"{otherBook.BookInfo.Name} -> {otherBook.Key.Name}");
-                    _logger.Info($"{comparerResult.Name.Diff:0.00}");
-                    _logger.Info(string.Empty);
-                    _logger.Info($"{thisBook.BookInfo.Authors}");
-                    _logger.Info($"{otherBook.BookInfo.Authors}");
-                    _logger.Info($"{comparerResult.Author.Diff:0.00}");
-                    _logger.Info(string.Empty);
+                if (!thisBook.BookInfo.Similar.IsNullOrEmpty() && thisBook.BookInfo.Similar.Contains(otherBook.BookInfo)) {
+                    continue;
                 }
-            }
 
+                var comparerResult = _bookComparer.Compare(thisBook, otherBook);
+                if (!comparerResult.Author.Success || !comparerResult.Name.Success) {
+                    continue;
+                }
+
+                thisBook.BookInfo.AddSimilar(otherBook.BookInfo, comparerResult);
+                otherBook.BookInfo.AddSimilar(thisBook.BookInfo, comparerResult);
+
+                result.SimilarBooks.Add(otherBook.BookInfo);
+
+                _logger.Info($"{thisBook.BookInfo.Name} -> {thisBook.Key.Name}");
+                _logger.Info($"{otherBook.BookInfo.Name} -> {otherBook.Key.Name}");
+                _logger.Info($"{comparerResult.Name.Diff:0.00}");
+                _logger.Info(string.Empty);
+                _logger.Info($"{thisBook.BookInfo.Authors}");
+                _logger.Info($"{otherBook.BookInfo.Authors}");
+                _logger.Info($"{comparerResult.Author.Diff:0.00}");
+                _logger.Info(string.Empty);
+            }
+            
             return result;
         }
-        
+
         /// <summary>
         /// Получение фильтра для апдейта книги
         /// </summary>
@@ -184,7 +196,7 @@ namespace Book.Comparer.Logic {
             var books = await GetBooks();
             var wordToBooks = CreateWordToBooksMap(books);
             
-            var findSimilarBlock = new TransformBlock<CompareBook, SaveResult>(book => FindSimilar(book, wordToBooks), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _comparerConfig.MaxThread, EnsureOrdered = false });
+            var findSimilarBlock = new TransformBlock<CompareBook, SaveResult>(book => FindSimilar(book, wordToBooks), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _comparerConfig.MaxThread });
             findSimilarBlock.CompleteMessage(_logger, "Закончили сравнение всех книг. Ждем сохранения.");
             
             var updateBooks = new ActionBlock<SaveResult>(UpdateSimilarBooks);
