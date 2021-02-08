@@ -9,7 +9,6 @@ using BiblioClub.Parser.Types;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;
-using Newtonsoft.Json;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
@@ -66,8 +65,7 @@ namespace BiblioClub.Parser.Logic {
             pairs.AddRange(ids.Select(id => new KeyValuePair<string, string>("books_ids[]", id.ToString())));
 
             var dataContent = new FormUrlEncodedContent(pairs.ToArray());
-            var content = await client.PostWithTriesAsync(url, dataContent);
-            return string.IsNullOrEmpty(content) ? new BookShortInfo[]{} : JsonConvert.DeserializeObject<IEnumerable<BookShortInfo>>(content);
+            return await client.PostJson<IEnumerable<BookShortInfo>>(url, dataContent) ?? Enumerable.Empty<BookShortInfo>();
         }
         
 

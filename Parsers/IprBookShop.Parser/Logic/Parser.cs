@@ -11,7 +11,6 @@ using Core.Types;
 using HtmlAgilityPack;
 using IprBookShop.Parser.Configs;
 using IprBookShop.Parser.Types;
-using Newtonsoft.Json;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
@@ -125,8 +124,7 @@ namespace IprBookShop.Parser.Logic {
                 new KeyValuePair<string, string>("available", "1")
             };
 
-            var content = await client.PostWithTriesAsync(_apiUrl, new FormUrlEncodedContent(values));
-            return string.IsNullOrEmpty(content) ? new SearchResponseData() : JsonConvert.DeserializeObject<SearchResponseData>(content);
+            return await client.PostJson<SearchResponseData>(_apiUrl, new FormUrlEncodedContent(values)) ?? new SearchResponseData();
         }
     }
 }
