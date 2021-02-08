@@ -91,7 +91,7 @@ namespace BiblioRossica.Parser.Logic {
                 } else if (name.Contains("Страниц")) {
                     int.TryParse(value, out book.Pages);
                 } else if (name.Contains("ISBN")) {
-                    book.ISBN = value;
+                    book.ISBN = tds[1].Attributes["title"]?.Value ?? value;
                 }
             }
 
