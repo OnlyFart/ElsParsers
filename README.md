@@ -27,7 +27,7 @@ uraitparser --help
 * [IPR Books](http://www.iprbookshop.ru/)
 * [Urait](https://urait.ru/)
 * [Лань](https://lanbook.com/)
-* [Znarium](https://znanium.com/)
+* [Znanium](https://znanium.com/)
 * [Biblioclub](https://biblioclub.ru/)
 * [Академия](https://academia-moscow.ru/)
 * [IBooks](https://ibooks.ru/)
