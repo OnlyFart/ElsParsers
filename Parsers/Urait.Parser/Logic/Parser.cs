@@ -81,7 +81,7 @@ namespace Urait.Parser.Logic {
             if (!string.IsNullOrEmpty(book.Bib)) {
                 var publisher = Regex.Match(book.Bib, "Издательство (.*?),");
                 if (publisher.Success) {
-                    book.Bib = publisher.Groups[1].Value;
+                    book.Publisher = publisher.Groups[1].Value;
                 }
             }
 
