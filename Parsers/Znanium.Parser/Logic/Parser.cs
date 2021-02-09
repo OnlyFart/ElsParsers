@@ -51,7 +51,7 @@ namespace Znanium.Parser.Logic {
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
             var (response, statusCode) = await client.GetStringWithTriesAsync(new Uri($"https://znanium.com/catalog/document?id={id}"));
 
-            if (statusCode != HttpStatusCode.OK) {
+            if (statusCode == HttpStatusCode.NotFound) {
                 return new BookInfo(id.ToString(), ElsName);
             }
             
