@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -9,6 +10,7 @@ using System.Web;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;
+using HtmlAgilityPack;
 using Parser.Core.Configs;
 using Parser.Core.Extensions;
 using Parser.Core.Logic;
@@ -47,10 +49,14 @@ namespace Znanium.Parser.Logic {
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
-            var doc = await client.GetHtmlDoc(new Uri($"https://znanium.com/catalog/document?id={id}"));
-            if (doc == default) {
-                return default;
+            var (response, statusCode) = await client.GetStringWithTriesAsync(new Uri($"https://znanium.com/catalog/document?id={id}"));
+
+            if (statusCode != HttpStatusCode.OK) {
+                return new BookInfo(id.ToString(), ElsName);
             }
+            
+            var doc = new HtmlDocument();
+            doc.LoadHtml(response);
             
             var bookContent = doc.DocumentNode.GetByFilterFirst("div", "book-content");
             var bookInfoBlock = bookContent.GetByFilterFirst("div", "desktop-book-header");
@@ -103,7 +109,7 @@ namespace Znanium.Parser.Logic {
         private static async Task<SitemapFile> GetLinksSitemaps(HttpClient client, Uri sitemap) {
             var rootSitemap = await client.GetStringWithTriesAsync(sitemap);
 
-            using var reader = new StringReader(rootSitemap);
+            using var reader = new StringReader(rootSitemap.Response);
             return await new XmlSitemapParser().ParseSitemapAsync(reader);
         }
     }
