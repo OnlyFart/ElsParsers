@@ -34,6 +34,7 @@ uraitparser --help
 * [Book.ru](https://book.ru/)
 * [RuCont](https://lib.rucont.ru/) - только каталог книг
 * [BiblioRossica](http://www.bibliorossica.com/)
+* [StudentLibrary](https://www.studentlibrary.ru/)
 
 Для работы каждого из парсеров необходима база данных [MongoDb](https://www.mongodb.com/).
 При повторных запусках парсеров будут дособраны книги, которые отсутствуют на текущий момент в базе
