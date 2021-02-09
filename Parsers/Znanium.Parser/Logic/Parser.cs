@@ -51,8 +51,9 @@ namespace Znanium.Parser.Logic {
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
             var (response, statusCode) = await client.GetStringWithTriesAsync(new Uri($"https://znanium.com/catalog/document?id={id}"));
 
+            var book = new BookInfo(id.ToString(), ElsName);
             if (statusCode == HttpStatusCode.NotFound) {
-                return new BookInfo(id.ToString(), ElsName);
+                return book;
             }
             
             var doc = new HtmlDocument();
@@ -60,12 +61,10 @@ namespace Znanium.Parser.Logic {
             
             var bookContent = doc.DocumentNode.GetByFilterFirst("div", "book-content");
             var bookInfoBlock = bookContent.GetByFilterFirst("div", "desktop-book-header");
-
-            var book = new BookInfo(id.ToString(), ElsName) {
-                Name = bookInfoBlock.GetByFilterFirst("h1")?.InnerText.Trim(),
-                Bib = doc.GetElementbyId("doc-biblio-card").InnerText.Trim()
-            };
-
+            
+            book.Name = bookInfoBlock.GetByFilterFirst("h1")?.InnerText.Trim();
+            book.Bib = doc.GetElementbyId("doc-biblio-card").InnerText.Trim();
+            
             foreach (var div in bookContent.GetByFilter("div", "book-links2")) {
                 var name = div.InnerText.Trim();
                 var value = div.GetByFilter("a");
