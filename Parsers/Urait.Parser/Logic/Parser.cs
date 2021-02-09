@@ -100,7 +100,7 @@ namespace Urait.Parser.Logic {
         private static async Task<IEnumerable<Uri>> GetLinksSitemaps(HttpClient client, Uri sitemap) {
             var rootSitemap = await client.GetStringWithTriesAsync(sitemap);
 
-            using var reader = new StringReader(rootSitemap);
+            using var reader = new StringReader(rootSitemap.Response);
             var sm = await new XmlSitemapParser().ParseSitemapAsync(reader);
             return sm.Urls.Select(t => t.Location);
         }

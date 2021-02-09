@@ -33,13 +33,13 @@ namespace Parser.Core.Extensions {
             return httpClient;
         }
 
-        public static async Task<string> GetStringWithTriesAsync(this HttpClient client, Uri url) {
+        public static async Task<(string Response, HttpStatusCode StatusCode)> GetStringWithTriesAsync(this HttpClient client, Uri url) {
             for (var i = 0; i < MAX_TRY_COUNT; i++) {
                 try {
                     _logger.Debug($"Get {url}");
                     using var response = await client.GetAsync(url);
                     if (response.StatusCode == HttpStatusCode.NotFound) {
-                        return default;
+                        return (string.Empty, response.StatusCode);
                     }
                     
                     if (response.StatusCode != HttpStatusCode.OK) {
@@ -48,7 +48,7 @@ namespace Parser.Core.Extensions {
                     
                     _logger.Debug($"End {url}. Response {response}");
                     
-                    return await response.Content.ReadAsStringAsync();
+                    return (await response.Content.ReadAsStringAsync(), response.StatusCode);
                 } catch (Exception e) {
                     _logger.Error(e.ToString());
                 }
@@ -80,9 +80,9 @@ namespace Parser.Core.Extensions {
         }
         
         public static async Task<T> GetJson<T>(this HttpClient client, Uri uri) {
-            var content = await client.GetStringWithTriesAsync(uri);
+            var (response, statusCode) = await client.GetStringWithTriesAsync(uri);
 
-            return string.IsNullOrWhiteSpace(content) ? default : JsonConvert.DeserializeObject<T>(content);
+            return statusCode != HttpStatusCode.OK ? default : JsonConvert.DeserializeObject<T>(response);
         }
         
         public static async Task<T> PostJson<T>(this HttpClient client, Uri uri, ByteArrayContent data) {
@@ -92,14 +92,14 @@ namespace Parser.Core.Extensions {
         }
 
         public static async Task<HtmlDocument> GetHtmlDoc(this HttpClient client, Uri uri) {
-            var content = await client.GetStringWithTriesAsync(uri);
+            var (response, statusCode) = await client.GetStringWithTriesAsync(uri);
 
-            if (string.IsNullOrWhiteSpace(content)) {
+            if (statusCode != HttpStatusCode.OK) {
                 return default;
             }
             
             var doc = new HtmlDocument();
-            doc.LoadHtml(content);
+            doc.LoadHtml(response);
 
             return doc;
         }

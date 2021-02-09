@@ -58,7 +58,7 @@ namespace RuCont.Parser.Logic {
         private static async Task<SitemapFile> GetLinksSitemaps(HttpClient client, Uri sitemap) {
             var rootSitemap = await client.GetStringWithTriesAsync(sitemap);
 
-            using var reader = new StringReader(rootSitemap);
+            using var reader = new StringReader(rootSitemap.Response);
             return await new XmlSitemapParser().ParseSitemapAsync(reader);
         }
 
