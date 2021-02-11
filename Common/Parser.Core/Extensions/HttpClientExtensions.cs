@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -56,7 +57,49 @@ namespace Parser.Core.Extensions {
 
             return default;
         }
+        
+        private static HttpRequestMessage CloneHttpRequestMessage(this HttpRequestMessage req)
+        {
+            var clone = new HttpRequestMessage(req.Method, req.RequestUri);
 
+            clone.Content = req.Content;
+            clone.Version = req.Version;
+
+            foreach (KeyValuePair<string, object> prop in req.Properties) {
+                clone.Properties.Add(prop);
+            }
+
+            foreach (KeyValuePair<string, IEnumerable<string>> header in req.Headers) {
+                clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
+
+            return clone;
+        }
+        
+        public static async Task<string> GetStringWithTriesAsync(this HttpClient client, HttpRequestMessage message) {
+            for (var i = 0; i < MAX_TRY_COUNT; i++) {
+                try {
+                    _logger.Debug($"Get {message.RequestUri}");
+                    using var tmpMsg = CloneHttpRequestMessage(message);
+                    using var response = await client.SendAsync(tmpMsg);
+                    if (response.StatusCode == HttpStatusCode.NotFound) {
+                        return default;
+                    }
+                    
+                    if (response.StatusCode != HttpStatusCode.OK) {
+                        continue;
+                    }
+                    
+                    _logger.Debug($"End {message.RequestUri}. Response {response}");
+                    return await response.Content.ReadAsStringAsync();
+                } catch (Exception e) {
+                    _logger.Error(e.ToString());
+                }
+            }
+
+            return default;
+        }
+        
         public static async Task<string> PostWithTriesAsync(this HttpClient client, Uri uri, ByteArrayContent data) {
             for (var i = 0; i < MAX_TRY_COUNT; i++) {
                 try {
@@ -93,6 +136,19 @@ namespace Parser.Core.Extensions {
 
         public static async Task<HtmlDocument> GetHtmlDoc(this HttpClient client, Uri uri) {
             var content = await client.GetStringWithTriesAsync(uri);
+
+            if (string.IsNullOrWhiteSpace(content)) {
+                return default;
+            }
+            
+            var doc = new HtmlDocument();
+            doc.LoadHtml(content);
+
+            return doc;
+        }
+        
+        public static async Task<HtmlDocument> GetHtmlDoc(this HttpClient client, HttpRequestMessage message) {
+            var content = await client.GetStringWithTriesAsync(message);
 
             if (string.IsNullOrWhiteSpace(content)) {
                 return default;
