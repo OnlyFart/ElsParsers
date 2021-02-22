@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Comparer\Book.Comparer.Logic\Book.Comparer.Logic.csproj" />
+      <ProjectReference Include="..\Comparer\Book.Comparer\Book.Comparer.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="trash.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="bibs.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>

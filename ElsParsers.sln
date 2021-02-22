@@ -34,6 +34,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuCont.Parser", "Parsers\Ru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioRossica.Parser", "Parsers\BiblioRossica.Parser\BiblioRossica.Parser.csproj", "{4A80AB4A-C740-4141-81D1-C6417FAABEF0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox", "Sandbox\Sandbox.csproj", "{9B739CFF-386E-4068-AAE6-81BE2915C6B3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -110,6 +112,10 @@ Global
 		{4A80AB4A-C740-4141-81D1-C6417FAABEF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4A80AB4A-C740-4141-81D1-C6417FAABEF0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4A80AB4A-C740-4141-81D1-C6417FAABEF0}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{9B739CFF-386E-4068-AAE6-81BE2915C6B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B739CFF-386E-4068-AAE6-81BE2915C6B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B739CFF-386E-4068-AAE6-81BE2915C6B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B739CFF-386E-4068-AAE6-81BE2915C6B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9555FC84-CBDA-4383-A1A4-2058AAF4481E} = {BE6D9B84-7A7A-4ECA-BD88-AA442D3E5771}

@@ -174,18 +174,11 @@ namespace Book.Comparer.Logic {
             var filterDefinition = Builders<BookInfo>.Filter
                 .Where(t => t.Name != null && t.Name.Length > 0 && t.Authors != null && t.Authors.Length > 0);
 
-            var result = new List<CompareBook>();
             var books = await _bookRepository.Read(filterDefinition, projection);
 
             _logger.Info("Начинаю преобразование книг в сравниваемые");
-            
-            foreach (var book in books) {
-                var compareBook = new CompareBook(book);
-                compareBook.Init(_normalizer);
-                result.Add(compareBook);
-            }
 
-            return result;
+            return books.Select(book => CompareBook.Create(book, _normalizer)).ToList();
         }
 
         /// <summary>

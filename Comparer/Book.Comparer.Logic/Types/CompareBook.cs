@@ -10,44 +10,82 @@ namespace Book.Comparer.Logic.Types {
         public readonly BookInfo BookInfo;
         public CompareBookKey Key;
 
-        public CompareBook(BookInfo bookInfo) {
+        /// <summary>
+        /// Создание "сравниваемой" книги
+        /// </summary>
+        /// <param name="bookInfo"></param>
+        /// <param name="normalizer"></param>
+        /// <returns></returns>
+        public static CompareBook Create(BookInfo bookInfo, Normalizer normalizer) {
+            var result = new CompareBook(bookInfo);
+            result.BookInfo.Similar ??= new HashSet<BookInfo>();
+            result.Key = new CompareBookKey()
+                .WithName(bookInfo.Name, normalizer)
+                .WithAuthors(bookInfo.Authors, normalizer)
+                .WithPublisher(bookInfo.Publisher, normalizer)
+                .WithYear(bookInfo.Year, normalizer)
+                .WithISBN(bookInfo.ISBN, normalizer);
+            
+            return result;
+        }
+        
+        private CompareBook(BookInfo bookInfo) {
             BookInfo = bookInfo;
         }
+    }
 
-        /// <summary>
-        /// Построение ключа по которому будет происходить построение
-        /// </summary>
-        public void Init(Normalizer normalizer) {
-            // ГОСТ 5812-2014
-            if (BookInfo.Similar == null) {
-                BookInfo.Similar = new HashSet<BookInfo>();
-            }
+    public class CompareBookKey {
+        public string Year { get; private set; }
+        public string ISBN { get; private set; }
+        public HashSet<string> Authors { get; private set; }
+        public string Name { get; private set; }
+        public HashSet<string> NameWords { get; private set; }
+        public string Publisher { get; private set; }
+
+        public CompareBookKey WithYear(string year, Normalizer normalizer) {
+            Year = normalizer.OnlyDigits(year ?? string.Empty);
+            return this;
+        }
+        
+        public CompareBookKey WithISBN(string isbn, Normalizer normalizer) {
+            ISBN = normalizer.OnlyDigits(string.IsNullOrEmpty(isbn) ? isbn ?? string.Empty : isbn);
+            return this;
+        }
+        
+        public CompareBookKey WithPublisher(string publisher, Normalizer normalizer) {
+            Publisher = normalizer.FullClean((publisher ?? string.Empty).ToLowerInvariant());
+            return this;
+        }
+        
+        public CompareBookKey WithName(string name, Normalizer normalizer) {
+            Name = normalizer.FullClean((name ?? string.Empty).ToLowerInvariant());
+            NameWords = normalizer
+                .SplitWords(normalizer.RemoveVowels(normalizer.ShortClean((name ?? string.Empty).ToLowerInvariant())))
+                .Where(w => !string.IsNullOrWhiteSpace(w)).ToHashSet();
+            return this;
+        }
+        
+        public CompareBookKey WithAuthors(string authors, Normalizer normalizer) {
+            Authors = new HashSet<string>();
             
-            Key = new CompareBookKey {
-                ISBN = normalizer.OnlyDigits(string.IsNullOrEmpty(BookInfo.ISBN) ? BookInfo.ISSN ?? string.Empty : BookInfo.ISBN),
-                Year = normalizer.OnlyDigits(BookInfo.Year ?? string.Empty),
-                Publisher = normalizer.FullClean((BookInfo.Publisher ?? string.Empty).ToLowerInvariant()),
-                Name = normalizer.FullClean((BookInfo.Name ?? string.Empty).ToLowerInvariant()),
-                NameWords = normalizer.SplitWords(normalizer.RemoveVowels(normalizer.ShortClean((BookInfo.Name ?? string.Empty).ToLowerInvariant()))).Where(w => !string.IsNullOrWhiteSpace(w)).ToHashSet(),
-                Authors = new HashSet<string>() 
-            };
-
-            if (string.IsNullOrWhiteSpace(BookInfo.Authors)) {
-                return;
+            if (string.IsNullOrWhiteSpace(authors)) {
+                return this;
             }
 
-            foreach (var author in BookInfo.Authors.ToLowerInvariant().Split(new []{ ",", ";", ":" }, StringSplitOptions.RemoveEmptyEntries)) {
+            foreach (var author in authors.ToLowerInvariant().Split(new []{ ",", ";", ":" }, StringSplitOptions.RemoveEmptyEntries)) {
                 var split = normalizer.SplitWords(author).Where(t => !string.IsNullOrWhiteSpace(t) && !normalizer.NonSingAuthorWords.Contains(t)).ToArray();
 
                 // Если паттерн ФИО стандартный или перестановок будет очень много, то перестановки не генерим
                 if (CheckFio(split, 2) || CheckFio(split, 3) || split.Length >= 5) {
-                    Key.Authors.Add(normalizer.FirstFullOtherFirst(split));
+                    Authors.Add(normalizer.FirstFullOtherFirst(split));
                 } else {
                     foreach (var permutation in split.AllPermutations()) {
-                        Key.Authors.Add(normalizer.FirstFullOtherFirst(permutation.ToArray()));
+                        Authors.Add(normalizer.FirstFullOtherFirst(permutation.ToArray()));
                     }
                 }
             }
+
+            return this;
         }
         
         /// <summary>
@@ -73,14 +111,5 @@ namespace Book.Comparer.Logic.Types {
 
             return true;
         }
-    }
-
-    public class CompareBookKey {
-        public string Year;
-        public string ISBN;
-        public HashSet<string> Authors;
-        public string Name;
-        public HashSet<string> NameWords;
-        public string Publisher;
     }
 }
