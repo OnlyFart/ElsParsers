@@ -1,6 +1,8 @@
 using Book.Comparer.Configs;
+using Book.Comparer.Logic.BookGetter;
 using Book.Comparer.Logic.Comparers;
 using Book.Comparer.Logic.Configs;
+using Book.Comparer.Logic.SimilarSaver;
 using Core.Configs;
 using Core.Providers.Implementations;
 using Core.Providers.Interfaces;
@@ -27,6 +29,8 @@ namespace Book.Comparer.IoC {
             Bind<IMongoConfig>().ToConstant((IMongoConfig) _options);
             Bind<IComparerConfig>().ToConstant((IComparerConfig) _options);
             Bind<IBookComparer>().To<BookComparer>();
+            Bind<ISimilarSaver>().To<SimilarSaver>();
+            Bind<ICompareBookGetter>().To<CompareBookGetter>();
             Bind<IBookComparerConfig>().ToConstant((IBookComparerConfig) _options);
             Bind<IRepository<BookInfo>>().To<MongoRepository<BookInfo>>();
         }
