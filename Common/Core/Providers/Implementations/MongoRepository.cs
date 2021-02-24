@@ -22,7 +22,7 @@ namespace Core.Providers.Implementations {
                 .GetCollection<T>(_config.CollectionName);
         }
 
-        public async Task<IEnumerable<TValue>> Read<TValue>(FilterDefinition<T> filter, Expression<Func<T, TValue>> projection) {
+        public async Task<IReadOnlyCollection<TValue>> Read<TValue>(FilterDefinition<T> filter, Expression<Func<T, TValue>> projection) {
             _logger.Info($"Выполняю загрузку из {_config.DatabaseName}/{_config.CollectionName}");
             
             var listAsync = await _collection.Find(filter).Project(projection).ToListAsync();
@@ -43,10 +43,10 @@ namespace Core.Providers.Implementations {
             return false;
         }
 
-        public async Task<IEnumerable<TValue>> Read<TValue>(FilterDefinition<T> filter, ProjectionDefinition<T, TValue> projection) {
+        public async Task<IReadOnlyCollection<TValue>> Read<TValue>(FilterDefinition<T> filter, ProjectionDefinition<T, TValue> projection) {
             _logger.Info($"Выполняю загрузку из {_config.DatabaseName}/{_config.CollectionName}");
 
-            var listAsync = await _collection.Find(filter).Project(projection).ToListAsync();
+            List<TValue> listAsync = await _collection.Find(filter).Project(projection).ToListAsync();
 
             _logger.Info($"Загружено {listAsync.Count} записей");
 
