@@ -10,6 +10,8 @@ namespace Book.Comparer.Logic.Utils {
         private static readonly Regex _nonSignCharacters = new Regex("\\b\\w\\w?\\b|\\d", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _nonCharacter = new Regex("\\W", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _nonDigits = new Regex("\\D", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        
+        public readonly string[] AuthorsSeparator = { ",", ";", ":" };
         public readonly HashSet<string> NonSingAuthorWords;
 
         public Normalizer(NormalizerConfig config) {

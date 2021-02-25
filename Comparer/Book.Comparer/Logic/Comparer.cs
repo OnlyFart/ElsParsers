@@ -37,7 +37,7 @@ namespace Book.Comparer.Logic {
         private static IEnumerable<CompareBook> GetOtherBooks(CompareBook thisBook, IReadOnlyDictionary<string, List<CompareBook>> wordToBooks) {
             var set = new HashSet<CompareBook>();
 
-            foreach (var word in thisBook.Key.NameWords) {
+            foreach (var word in thisBook.Key.NameTokens) {
                 if (wordToBooks.TryGetValue(word, out var otherBooks)) {
                     foreach (var otherBook in otherBooks.Where(otherBook => set.Add(otherBook))) {
                         yield return otherBook;
@@ -100,7 +100,7 @@ namespace Book.Comparer.Logic {
             var result = new Dictionary<string, List<CompareBook>>();
 
             foreach (var book in books) {
-                foreach (var word in book.Key.NameWords) {
+                foreach (var word in book.Key.NameTokens) {
                     if (!result.TryGetValue(word, out var res)) {
                         res = new List<CompareBook>();
                         result[word] = res;

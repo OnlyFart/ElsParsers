@@ -46,7 +46,7 @@ namespace Core.Providers.Implementations {
         public async Task<IReadOnlyCollection<TValue>> Read<TValue>(FilterDefinition<T> filter, ProjectionDefinition<T, TValue> projection) {
             _logger.Info($"Выполняю загрузку из {_config.DatabaseName}/{_config.CollectionName}");
 
-            List<TValue> listAsync = await _collection.Find(filter).Project(projection).ToListAsync();
+            var listAsync = await _collection.Find(filter).Project(projection).ToListAsync();
 
             _logger.Info($"Загружено {listAsync.Count} записей");
 

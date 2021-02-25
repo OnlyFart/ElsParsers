@@ -25,7 +25,7 @@ namespace Book.Comparer.Logic.Types {
                 .WithPublisher(bookInfo.Publisher, normalizer)
                 .WithYear(bookInfo.Year, normalizer)
                 .WithISBN(bookInfo.ISBN, normalizer);
-            
+
             return result;
         }
         
@@ -39,7 +39,7 @@ namespace Book.Comparer.Logic.Types {
         public string ISBN { get; private set; }
         public HashSet<string> Authors { get; private set; }
         public string Name { get; private set; }
-        public HashSet<string> NameWords { get; private set; }
+        public HashSet<string> NameTokens { get; private set; }
         public string Publisher { get; private set; }
 
         public CompareBookKey WithYear(string year, Normalizer normalizer) {
@@ -59,7 +59,7 @@ namespace Book.Comparer.Logic.Types {
         
         public CompareBookKey WithName(string name, Normalizer normalizer) {
             Name = normalizer.FullClean((name ?? string.Empty).ToLowerInvariant());
-            NameWords = normalizer
+            NameTokens = normalizer
                 .SplitWords(normalizer.RemoveVowels(normalizer.ShortClean((name ?? string.Empty).ToLowerInvariant())))
                 .Where(w => !string.IsNullOrWhiteSpace(w)).ToHashSet();
             return this;
@@ -72,7 +72,7 @@ namespace Book.Comparer.Logic.Types {
                 return this;
             }
 
-            foreach (var author in authors.ToLowerInvariant().Split(new []{ ",", ";", ":" }, StringSplitOptions.RemoveEmptyEntries)) {
+            foreach (var author in authors.ToLowerInvariant().Split(normalizer.AuthorsSeparator, StringSplitOptions.RemoveEmptyEntries)) {
                 var split = normalizer.SplitWords(author).Where(t => !string.IsNullOrWhiteSpace(t) && !normalizer.NonSingAuthorWords.Contains(t)).ToArray();
 
                 // Если паттерн ФИО стандартный или перестановок будет очень много, то перестановки не генерим
@@ -100,12 +100,14 @@ namespace Book.Comparer.Logic.Types {
             }
 
             for (var i = 0; i < length; i++) {
-                if (i == 0 && fio[i].Length == 1) {
-                    return false;
+                switch (i) {
+                    case 0 when fio[i].Length == 1:
+                        return false;
                 }
 
-                if (i > 0 && fio[i].Length != 1) {
-                    return false;
+                switch (i > 0) {
+                    case true when fio[i].Length != 1:
+                        return false;
                 }
             }
 
