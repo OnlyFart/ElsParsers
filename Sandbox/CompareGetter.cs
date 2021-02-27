@@ -39,7 +39,7 @@ namespace Sandbox {
         
         public async Task<IReadOnlyCollection<CompareBook>> Get() {
             var books = GetBooks();
-            var trash = GetFileLines("trash.txt").ContinueWith(t => t.Result.ToHashSet());
+            var trash = GetFileLines("trash.txt").ContinueWith(t => t.Result.ToHashSet(StringComparer.InvariantCultureIgnoreCase));
             var bibs = GetFileLines("bibs.txt");
 
             var authors = books.ContinueWith(t => GetAuthors(t.Result, _normalizer));
@@ -49,8 +49,7 @@ namespace Sandbox {
             var bibParser = new BibParser(_normalizer, bibParserConfig);
             
             var result = new ConcurrentQueue<CompareBook>();
-            
-            Parallel.ForEach(await bibs, new ParallelOptions {MaxDegreeOfParallelism = 7},                bib => {
+            Parallel.ForEach(await bibs, new ParallelOptions { MaxDegreeOfParallelism = 7 }, bib => {
                 var bookInfo = bibParser.Parse(bib);
                 if (string.IsNullOrWhiteSpace(bookInfo.Authors) || string.IsNullOrWhiteSpace(bookInfo.Name)) {
                     return;
@@ -76,12 +75,10 @@ namespace Sandbox {
             return await File.ReadAllLinesAsync(name, Encoding.UTF8);
         }
         
-        private static IEnumerable<string> GetPublishers(IEnumerable<BookInfo> books) {
+        private static HashSet<string> GetPublishers(IEnumerable<BookInfo> books) {
             return books.Where(book => !string.IsNullOrWhiteSpace(book.Publisher))
-                .Select(book => book.Publisher.Clean().Cover(" ").ToLowerInvariant())
-                .Distinct()
-                .OrderByDescending(t => t.Length)
-                .ToList();
+                .Select(book => book.Publisher.Clean().ToLowerInvariant())
+                .ToHashSet();
         }
         
         private static HashSet<string> GetAuthors(IEnumerable<BookInfo> books, Normalizer normalizer) {

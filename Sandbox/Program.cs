@@ -19,15 +19,7 @@ namespace Sandbox {
             public string CollectionName => "Books";
         }
 
-        private class ComparerConfig : IBookComparerConfig {
-            public double LevensteinBorder { get; set; }
-            public double IntersectBorder { get; set; }
-
-            public ComparerConfig(double lb, double ib) {
-                LevensteinBorder = lb;
-                IntersectBorder = ib;
-            }
-        }
+        private record ComparerConfig(double LevensteinBorder, double IntersectBorder) : IBookComparerConfig;
 
         private static async Task Main(string[] args) {
             if (File.Exists("similar.txt")) {

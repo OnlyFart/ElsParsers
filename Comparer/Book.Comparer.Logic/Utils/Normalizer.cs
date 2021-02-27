@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -7,9 +8,9 @@ namespace Book.Comparer.Logic.Utils {
     public class Normalizer {
         private readonly Regex _nonSignWords;
         private readonly Regex _vowels;
-        private static readonly Regex _nonSignCharacters = new Regex("\\b\\w\\w?\\b|\\d", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex _nonCharacter = new Regex("\\W", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex _nonDigits = new Regex("\\D", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _nonSignCharacters = new("\\b\\w\\w?\\b|\\d", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _nonCharacter = new("\\W", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _nonDigits = new("\\D", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         
         public readonly string[] AuthorsSeparator = { ",", ";", ":" };
         public readonly HashSet<string> NonSingAuthorWords;
@@ -17,7 +18,7 @@ namespace Book.Comparer.Logic.Utils {
         public Normalizer(NormalizerConfig config) {
             _nonSignWords = new Regex(config.Regexes.NonSignWords, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
             _vowels = new Regex(config.Regexes.Vowels, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-            NonSingAuthorWords = new HashSet<string>(config.Lists.NonSingAuthorWords);
+            NonSingAuthorWords = new HashSet<string>(config.Lists.NonSingAuthorWords, StringComparer.InvariantCultureIgnoreCase);
         }
 
         public string FullClean(string str) {
