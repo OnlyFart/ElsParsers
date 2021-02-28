@@ -75,6 +75,7 @@ namespace Core.Types {
 
         private BookInfo Clone() {
             return new(ExternalId, ElsName) {
+                Id = Id,
                 Authors = Authors,
                 ISBN = ISBN,
                 ISSN = ISSN,
