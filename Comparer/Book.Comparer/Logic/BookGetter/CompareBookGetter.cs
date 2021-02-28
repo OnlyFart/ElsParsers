@@ -24,8 +24,11 @@ namespace Book.Comparer.Logic.BookGetter {
             _normalizer = normalizer;
         }
 
-        public async Task<IReadOnlyCollection<CompareBook>> Get() {
-            ProjectionDefinition<BookInfo, BookInfo> bookProj = Builders<BookInfo>.Projection.Exclude(b => b.Bib);
+        private Task<IReadOnlyCollection<BookInfo>> GetBooks() {
+            ProjectionDefinition<BookInfo, BookInfo> bookProj = Builders<BookInfo>.Projection
+                .Exclude(b => b.Bib)
+                .Exclude(b => b.Year)
+                .Exclude(b => b.Pages);
 
             var bookFilter = Builders<BookInfo>.Filter
                 .Where(t => t.Name != null && 
@@ -34,32 +37,45 @@ namespace Book.Comparer.Logic.BookGetter {
                     t.Authors.Length > 0 && 
                     t.ElsName != Const.BIB_ELS);
 
-            var books = _repository.Read(bookFilter, bookProj);
-            
+            return _repository.Read(bookFilter, bookProj);  
+        }
+
+        private Task<IReadOnlyCollection<BookInfo>> GetBibBooks() {
             var bibBookProj = Builders<BookInfo>.Projection.Expression(t => t);
             var bibBookFilter = Builders<BookInfo>.Filter.Where(t => t.ElsName == Const.BIB_ELS);
-            var bibBooks = await _repository.Read(bibBookFilter, bibBookProj);
+            return _repository.Read(bibBookFilter, bibBookProj);
+        }
 
+        private void ParseBibBooks(IReadOnlyCollection<BookInfo> books, IReadOnlyCollection<BookInfo> bibBooks) {
             var toParse = bibBooks.Where(b => !b.Compared).ToList();
-            if (toParse.Count > 0) {
-                _logger.Info($"Обнаружено {toParse.Count} книг, для которых необходимо распарсить БЗ.");
-                var bibParser = GetBibParser(await books);
-                _logger.Info("Создание парсера закончено. Начинаю парсинг.");
-                
-                foreach (var bibBook in toParse) {
-                    var (authors, name, publisher) = bibParser.Parse(bibBook.Bib);
-
-                    bibBook.Authors = authors;
-                    bibBook.Name = name;
-                    bibBook.Publisher = publisher;
-                }
-                
-                _logger.Info("Парсинг БЗ закончен.");
+            if (toParse.Count <= 0) {
+                return;
             }
+            
+            _logger.Info($"Обнаружено {toParse.Count} книг, для которых необходимо распарсить БЗ.");
+            var parser = GetBibParser(books);
+            _logger.Info("Создание парсера закончено. Начинаю парсинг.");
+                
+            foreach (var bibBook in toParse) {
+                var (authors, name, publisher) = parser.Parse(bibBook.Bib);
+
+                bibBook.Authors = authors;
+                bibBook.Name = name;
+                bibBook.Publisher = publisher;
+            }
+                
+            _logger.Info("Парсинг БЗ закончен.");
+        }
+        
+        public async Task<IReadOnlyCollection<CompareBook>> Get() {
+            var books = GetBooks();
+            var bibBooks = GetBibBooks();
+
+            ParseBibBooks(await books, await bibBooks);
 
             _logger.Info("Начинаю преобразование книг в сравниваемые");
 
-            return (await books).Union(bibBooks).AsParallel().Select(book => CompareBook.Create(book, _normalizer)).ToList();
+            return (await books).Union(await bibBooks).AsParallel().Select(book => CompareBook.Create(book, _normalizer)).ToList();
         }
 
         private BibParser GetBibParser(IReadOnlyCollection<BookInfo> books) {

@@ -24,13 +24,10 @@ namespace Book.Comparer.Logic.Types {
             
             result.BookInfo.SimilarBooks ??= new HashSet<SimilarInfo>();
             result.BookInfo.SimilarBibs ??= new HashSet<SimilarInfo>();
-            
+
             result.Key = new CompareBookKey()
                 .WithName(bookInfo.Name, normalizer)
-                .WithAuthors(bookInfo.Authors, normalizer)
-                .WithPublisher(bookInfo.Publisher, normalizer)
-                .WithYear(bookInfo.Year, normalizer)
-                .WithISBN(bookInfo.ISBN, normalizer);
+                .WithAuthors(bookInfo.Authors, normalizer);
 
             return result;
         }
@@ -41,28 +38,10 @@ namespace Book.Comparer.Logic.Types {
     }
 
     public class CompareBookKey {
-        public string Year { get; private set; }
-        public string ISBN { get; private set; }
         public HashSet<string> Authors { get; private set; }
         public string Name { get; private set; }
         public HashSet<string> NameTokens { get; private set; }
-        public string Publisher { get; private set; }
 
-        public CompareBookKey WithYear(string year, Normalizer normalizer) {
-            Year = normalizer.OnlyDigits(year ?? string.Empty);
-            return this;
-        }
-        
-        public CompareBookKey WithISBN(string isbn, Normalizer normalizer) {
-            ISBN = normalizer.OnlyDigits(string.IsNullOrEmpty(isbn) ? isbn ?? string.Empty : isbn);
-            return this;
-        }
-        
-        public CompareBookKey WithPublisher(string publisher, Normalizer normalizer) {
-            Publisher = normalizer.FullClean((publisher ?? string.Empty).ToLowerInvariant());
-            return this;
-        }
-        
         public CompareBookKey WithName(string name, Normalizer normalizer) {
             Name = normalizer.FullClean((name ?? string.Empty).ToLowerInvariant());
             NameTokens = normalizer
