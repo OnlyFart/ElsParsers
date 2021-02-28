@@ -16,14 +16,21 @@ namespace Book.Comparer.Logic.SimilarSaver {
             var compared = true;
             
             foreach (var similarBook in saveResult.SimilarBooks) {
-                lock (similarBook.Similar) {
-                    var update = Builders<BookInfo>.Update.Set(t => t.Similar, similarBook.Similar);
-                    compared &= _repository.Update(GetEqualsFilter(similarBook), update).Result;
+                lock (similarBook.SimilarBooks) {
+                    lock (similarBook.SimilarBibs) {
+                        var update = Builders<BookInfo>.Update
+                            .Set(t => t.SimilarBooks, similarBook.SimilarBooks)
+                            .Set(t => t.SimilarBibs, similarBook.SimilarBibs);
+                        
+                        compared &= _repository.Update(GetEqualsFilter(similarBook), update).Result;
+                    }
                 }
             }
-            
-            lock (saveResult.Book.Similar) {
-                UpdateProcessedBook(saveResult.Book, compared).Wait();
+
+            lock (saveResult.Book.SimilarBooks) {
+                lock (saveResult.Book.SimilarBibs) {
+                    UpdateProcessedBook(saveResult.Book, compared).Wait();
+                }
             }
 
             return Task.CompletedTask;
@@ -35,10 +42,7 @@ namespace Book.Comparer.Logic.SimilarSaver {
         /// <param name="book"></param>
         /// <returns></returns>
         private static FilterDefinition<BookInfo> GetEqualsFilter(BookInfo book) {
-            var elsEqual = Builders<BookInfo>.Filter.Eq(t => t.ElsName, book.ElsName);
-            var externalIdEqual = Builders<BookInfo>.Filter.Eq(t => t.ExternalId, book.ExternalId);
-
-            return Builders<BookInfo>.Filter.And(elsEqual, externalIdEqual);
+            return Builders<BookInfo>.Filter.Eq(t => t.Id, book.Id);
         }
 
         /// <summary>
@@ -50,8 +54,12 @@ namespace Book.Comparer.Logic.SimilarSaver {
         private async Task UpdateProcessedBook(BookInfo book, bool compared) {
             var update = Builders<BookInfo>.Update
                 .Set(t => t.Compared, compared)
-                .Set(t => t.Similar, book.Similar);
-            
+                .Set(t => t.Authors, book.Authors)
+                .Set(t => t.Publisher, book.Publisher)
+                .Set(t => t.Name, book.Name)
+                .Set(t => t.SimilarBooks, book.SimilarBooks)
+                .Set(t => t.SimilarBibs, book.SimilarBibs);
+
             await _repository.Update(GetEqualsFilter(book), update);
         }
     }

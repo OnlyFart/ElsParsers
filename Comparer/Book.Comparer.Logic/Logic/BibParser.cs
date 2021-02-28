@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Book.Comparer.Logic.Configs;
+using Book.Comparer.Logic.Types;
 using Book.Comparer.Logic.Utils;
 using Core.Extensions;
 using Core.Types;
 
-namespace Sandbox {
+namespace Book.Comparer.Logic.Logic {
     public class BibParser {
         private readonly Normalizer _normalizer;
         private readonly BibParserConfig _config;
@@ -32,11 +34,7 @@ namespace Sandbox {
             }
         }
 
-        public BookInfo Parse(string bib) {
-            var book = new BookInfo(bib, "Custom") {
-                Bib = bib
-            };
-
+        public BibParseResult Parse(string bib) {
             var cleanBib = bib.Clean();
             
             var bibAuthors = new HashSet<string>();
@@ -52,7 +50,7 @@ namespace Sandbox {
                 bibPublisher.Add(candidate);
             }
 
-            foreach (var token in GetTokens(cleanBib).Where(token => !_config.Trash.Contains(token))) {
+            foreach (var token in GetTokens(cleanBib).Where(token => !_normalizer.NonSignBibWords.Contains(token))) {
                 if (_config.Authors.Contains(token)) {
                     bibAuthors.Add(token);
                 } else {
@@ -60,11 +58,12 @@ namespace Sandbox {
                 }
             }
 
-            book.Authors = (bibAuthors.IsNullOrEmpty() ? GetAuthorsRgx(cleanBib, _normalizer) : bibAuthors).StrJoin(", ");
-            book.Name = bibName.StrJoin(" ");
-            book.Publisher = bibPublisher.StrJoin(", ");
+            
+            var authors = (bibAuthors.IsNullOrEmpty() ? GetAuthorsRgx(cleanBib, _normalizer) : bibAuthors).StrJoin(", ");
+            var name = bibName.StrJoin(" ");
+            var publisher = bibPublisher.StrJoin(", ");
 
-            return book;
+            return new BibParseResult(authors, name, publisher);
         }
 
         private static HashSet<string> GetAuthorsRgx(string bib, Normalizer normalizer) {

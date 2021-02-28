@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Core.Types {
     public class BookInfo {
@@ -12,6 +13,9 @@ namespace Core.Types {
             ExternalId = externalId;
             ElsName = elsName;
         }
+
+        [BsonIgnoreIfDefault, BsonIgnoreIfNull]
+        public object Id;
 
         /// <summary>
         /// Идентификатор книги
@@ -65,12 +69,13 @@ namespace Core.Types {
 
         public BookComparerResult ComparerResult;
 
-        public HashSet<BookInfo> Similar;
+        public HashSet<BookInfo> SimilarBooks;
+        public HashSet<BookInfo> SimilarBibs;
 
         public bool Compared;
 
         private BookInfo Clone() {
-            return new BookInfo(ExternalId, ElsName) {
+            return new(ExternalId, ElsName) {
                 Authors = Authors,
                 ISBN = ISBN,
                 ISSN = ISSN,
@@ -93,9 +98,7 @@ namespace Core.Types {
             }
 
             var other = (BookInfo) obj;
-            return obj.GetType() == GetType() && 
-                   ExternalId == other.ExternalId && 
-                   ElsName == other.ElsName;
+            return obj.GetType() == GetType() && Id == other.Id;
         }
 
         public override int GetHashCode() {
@@ -106,8 +109,14 @@ namespace Core.Types {
             var clone = book.Clone();
             clone.ComparerResult = compareResult;
 
-            lock (Similar) {
-                Similar.Add(clone);
+            if (book.ElsName == Const.BIB_ELS) {
+                lock (SimilarBibs) {
+                    SimilarBibs.Add(clone);
+                }
+            } else {
+                lock (SimilarBooks) {
+                    SimilarBooks.Add(clone);
+                }
             }
         }
     }

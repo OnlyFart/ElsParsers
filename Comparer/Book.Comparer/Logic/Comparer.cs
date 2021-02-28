@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Book.Comparer.Configs;
@@ -39,7 +40,7 @@ namespace Book.Comparer.Logic {
 
             foreach (var word in thisBook.Key.NameTokens) {
                 if (wordToBooks.TryGetValue(word, out var otherBooks)) {
-                    foreach (var otherBook in otherBooks.Where(otherBook => set.Add(otherBook))) {
+                    foreach (var otherBook in otherBooks.Where(otherBook => otherBook.IsComparedBook && !thisBook.BookInfo.Equals(otherBook.BookInfo) && set.Add(otherBook))) {
                         yield return otherBook;
                     }
                 }
@@ -57,16 +58,12 @@ namespace Book.Comparer.Logic {
                 Book = thisBook.BookInfo,
                 SimilarBooks = new HashSet<BookInfo>()
             };
+
+            if (!thisBook.IsComparedBook) {
+                return result;
+            }
             
             foreach (var otherBook in GetOtherBooks(thisBook, wordToBooks)) {
-                if (thisBook.BookInfo.Equals(otherBook.BookInfo)) {
-                    continue;
-                }
-
-                if (!thisBook.BookInfo.Similar.IsNullOrEmpty() && thisBook.BookInfo.Similar.Contains(otherBook.BookInfo)) {
-                    continue;
-                }
-
                 var comparerResult = _bookComparer.Compare(thisBook, otherBook);
                 if (!comparerResult.Author.Success || !comparerResult.Name.Success) {
                     continue;
@@ -77,14 +74,17 @@ namespace Book.Comparer.Logic {
 
                 result.SimilarBooks.Add(otherBook.BookInfo);
 
-                _logger.Info($"{thisBook.BookInfo.Name} -> {thisBook.Key.Name}");
-                _logger.Info($"{otherBook.BookInfo.Name} -> {otherBook.Key.Name}");
-                _logger.Info($"{comparerResult.Name.Diff:0.00}");
-                _logger.Info(string.Empty);
-                _logger.Info($"{thisBook.BookInfo.Authors}");
-                _logger.Info($"{otherBook.BookInfo.Authors}");
-                _logger.Info($"{comparerResult.Author.Diff:0.00}");
-                _logger.Info(string.Empty);
+                var sb = new StringBuilder();
+                sb.AppendLine($"{thisBook.BookInfo.Name} -> {thisBook.Key.Name}");
+                sb.AppendLine($"{otherBook.BookInfo.Name} -> {otherBook.Key.Name}");
+                sb.AppendLine($"{comparerResult.Name.Diff:0.00}");
+                sb.AppendLine();
+                sb.AppendLine($"{thisBook.BookInfo.Authors}");
+                sb.AppendLine($"{otherBook.BookInfo.Authors}");
+                sb.AppendLine($"{comparerResult.Author.Diff:0.00}");
+                sb.AppendLine();
+                
+                _logger.Info(sb.ToString);
             }
             
             return result;

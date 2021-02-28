@@ -7,11 +7,15 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Book.Comparer.Logic.BookGetter;
+using Book.Comparer.Logic.Configs;
+using Book.Comparer.Logic.Logic;
 using Book.Comparer.Logic.Types;
 using Book.Comparer.Logic.Utils;
+using Book.Comparer.Types;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;
+using Microsoft.VisualBasic;
 using MongoDB.Driver;
 
 namespace Sandbox {
@@ -38,14 +42,21 @@ namespace Sandbox {
         }
         
         public async Task<IReadOnlyCollection<CompareBook>> Get() {
-            var books = GetBooks();
+            var bibs = await GetFileLines("bibs.txt");
+
+            var books = bibs.Select(t => new BookInfo(string.Empty, Const.BIB_ELS) {Bib = t}).ToList();
+            await _repository.CreateMany(books);
+            
+            return new List<CompareBook>();
+            
+            /*var books = GetBooks();
             var trash = GetFileLines("trash.txt").ContinueWith(t => t.Result.ToHashSet(StringComparer.InvariantCultureIgnoreCase));
-            var bibs = GetFileLines("bibs.txt");
+            
 
             var authors = books.ContinueWith(t => GetAuthors(t.Result, _normalizer));
             var publishers = books.ContinueWith(t => GetPublishers(t.Result));
             
-            var bibParserConfig = new BibParserConfig(await authors, await publishers, await trash);
+            var bibParserConfig = new BibParserConfig(await authors, await publishers);
             var bibParser = new BibParser(_normalizer, bibParserConfig);
             
             var result = new ConcurrentQueue<CompareBook>();
@@ -61,7 +72,7 @@ namespace Sandbox {
                 }
             });
             
-            return result;
+            return result;*/
         }
 
         private static IEnumerable<string> GetTokens(string bib, int minLength = 1) {

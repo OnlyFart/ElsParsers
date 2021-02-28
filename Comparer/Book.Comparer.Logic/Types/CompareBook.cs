@@ -10,6 +10,9 @@ namespace Book.Comparer.Logic.Types {
         public readonly BookInfo BookInfo;
         public CompareBookKey Key;
 
+        public bool IsComparedBook =>
+            !string.IsNullOrWhiteSpace(BookInfo.Authors) && !string.IsNullOrWhiteSpace(BookInfo.Name);
+
         /// <summary>
         /// Создание "сравниваемой" книги
         /// </summary>
@@ -18,7 +21,8 @@ namespace Book.Comparer.Logic.Types {
         /// <returns></returns>
         public static CompareBook Create(BookInfo bookInfo, Normalizer normalizer) {
             var result = new CompareBook(bookInfo);
-            result.BookInfo.Similar ??= new HashSet<BookInfo>();
+            result.BookInfo.SimilarBooks ??= new HashSet<BookInfo>();
+            result.BookInfo.SimilarBibs ??= new HashSet<BookInfo>();
             result.Key = new CompareBookKey()
                 .WithName(bookInfo.Name, normalizer)
                 .WithAuthors(bookInfo.Authors, normalizer)

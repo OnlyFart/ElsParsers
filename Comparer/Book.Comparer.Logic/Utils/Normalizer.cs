@@ -14,11 +14,13 @@ namespace Book.Comparer.Logic.Utils {
         
         public readonly string[] AuthorsSeparator = { ",", ";", ":" };
         public readonly HashSet<string> NonSingAuthorWords;
+        public readonly HashSet<string> NonSignBibWords;
 
         public Normalizer(NormalizerConfig config) {
             _nonSignWords = new Regex(config.Regexes.NonSignWords, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
             _vowels = new Regex(config.Regexes.Vowels, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
             NonSingAuthorWords = new HashSet<string>(config.Lists.NonSingAuthorWords, StringComparer.InvariantCultureIgnoreCase);
+            NonSignBibWords = new HashSet<string>(config.Lists.NonSignBibWords, StringComparer.InvariantCultureIgnoreCase);
         }
 
         public string FullClean(string str) {
