@@ -7,7 +7,6 @@ using Book.Comparer.Logic.Configs;
 using Book.Comparer.Logic.Logic;
 using Book.Comparer.Logic.Types;
 using Book.Comparer.Logic.Utils;
-using Book.Comparer.Types;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;

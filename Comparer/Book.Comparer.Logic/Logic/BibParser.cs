@@ -6,7 +6,6 @@ using Book.Comparer.Logic.Configs;
 using Book.Comparer.Logic.Types;
 using Book.Comparer.Logic.Utils;
 using Core.Extensions;
-using Core.Types;
 
 namespace Book.Comparer.Logic.Logic {
     public class BibParser {

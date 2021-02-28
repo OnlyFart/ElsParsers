@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,15 +6,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Book.Comparer.Logic.BookGetter;
-using Book.Comparer.Logic.Configs;
-using Book.Comparer.Logic.Logic;
 using Book.Comparer.Logic.Types;
 using Book.Comparer.Logic.Utils;
-using Book.Comparer.Types;
 using Core.Extensions;
 using Core.Providers.Interfaces;
 using Core.Types;
-using Microsoft.VisualBasic;
 using MongoDB.Driver;
 
 namespace Sandbox {

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Core.Types {
@@ -102,7 +101,7 @@ namespace Core.Types {
         }
 
         public override int GetHashCode() {
-            return HashCode.Combine(ExternalId, ElsName);
+            return Id.GetHashCode();
         }
 
         public void AddSimilar(BookInfo book, BookComparerResult compareResult) {
