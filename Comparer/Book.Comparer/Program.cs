@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Book.Comparer.Configs;
-using Book.Comparer.Logic;
 using CommandLine;
 using Ninject;
 
