@@ -21,8 +21,10 @@ namespace Book.Comparer.Logic.Types {
         /// <returns></returns>
         public static CompareBook Create(BookInfo bookInfo, Normalizer normalizer) {
             var result = new CompareBook(bookInfo);
-            result.BookInfo.SimilarBooks ??= new HashSet<BookInfo>();
-            result.BookInfo.SimilarBibs ??= new HashSet<BookInfo>();
+            
+            result.BookInfo.SimilarBooks ??= new HashSet<SimilarInfo>();
+            result.BookInfo.SimilarBibs ??= new HashSet<SimilarInfo>();
+            
             result.Key = new CompareBookKey()
                 .WithName(bookInfo.Name, normalizer)
                 .WithAuthors(bookInfo.Authors, normalizer)

@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Core.Types {
+    [BsonIgnoreExtraElements]
     public class BookInfo {
         /// <summary>
         /// 
@@ -14,7 +16,7 @@ namespace Core.Types {
         }
 
         [BsonIgnoreIfDefault, BsonIgnoreIfNull]
-        public object Id;
+        public ObjectId Id;
 
         /// <summary>
         /// Идентификатор книги
@@ -66,27 +68,10 @@ namespace Core.Types {
         /// </summary>
         public int Pages;
 
-        public BookComparerResult ComparerResult;
-
-        public HashSet<BookInfo> SimilarBooks;
-        public HashSet<BookInfo> SimilarBibs;
+        public HashSet<SimilarInfo> SimilarBooks;
+        public HashSet<SimilarInfo> SimilarBibs;
 
         public bool Compared;
-
-        private BookInfo Clone() {
-            return new(ExternalId, ElsName) {
-                Id = Id,
-                Authors = Authors,
-                ISBN = ISBN,
-                ISSN = ISSN,
-                Publisher = Publisher,
-                Name = Name,
-                Year = Year,
-                Bib = Bib,
-                Pages = Pages,
-                ComparerResult = ComparerResult
-            };
-        }
 
         public override bool Equals(object obj) {
             if (ReferenceEquals(null, obj)) {
@@ -106,16 +91,15 @@ namespace Core.Types {
         }
 
         public void AddSimilar(BookInfo book, BookComparerResult compareResult) {
-            var clone = book.Clone();
-            clone.ComparerResult = compareResult;
+            var similarInfo = new SimilarInfo(book, compareResult);
 
             if (book.ElsName == Const.BIB_ELS) {
                 lock (SimilarBibs) {
-                    SimilarBibs.Add(clone);
+                    SimilarBibs.Add(similarInfo);
                 }
             } else {
                 lock (SimilarBooks) {
-                    SimilarBooks.Add(clone);
+                    SimilarBooks.Add(similarInfo);
                 }
             }
         }

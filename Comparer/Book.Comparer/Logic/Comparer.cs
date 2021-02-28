@@ -36,13 +36,13 @@ namespace Book.Comparer.Logic {
         /// <param name="wordToBooks">Обратный индекс "слово из названия" -> "список книг"</param>
         /// <returns></returns>
         private static IEnumerable<CompareBook> GetOtherBooks(CompareBook thisBook, IReadOnlyDictionary<string, List<CompareBook>> wordToBooks) {
-            var set = new HashSet<CompareBook>();
-
             foreach (var word in thisBook.Key.NameTokens) {
-                if (wordToBooks.TryGetValue(word, out var otherBooks)) {
-                    foreach (var otherBook in otherBooks.Where(otherBook => otherBook.IsComparedBook && !thisBook.BookInfo.Equals(otherBook.BookInfo) && set.Add(otherBook))) {
-                        yield return otherBook;
-                    }
+                if (!wordToBooks.TryGetValue(word, out var otherBooks)) {
+                    continue;
+                }
+                
+                foreach (var otherBook in otherBooks.Where(o => o.IsComparedBook && !thisBook.BookInfo.Equals(o.BookInfo))) {
+                    yield return otherBook;
                 }
             }
         }
@@ -62,7 +62,7 @@ namespace Book.Comparer.Logic {
             if (!thisBook.IsComparedBook) {
                 return result;
             }
-            
+
             foreach (var otherBook in GetOtherBooks(thisBook, wordToBooks)) {
                 var comparerResult = _bookComparer.Compare(thisBook, otherBook);
                 if (!comparerResult.Author.Success || !comparerResult.Name.Success) {
@@ -74,19 +74,21 @@ namespace Book.Comparer.Logic {
 
                 result.SimilarBooks.Add(otherBook.BookInfo);
 
-                var sb = new StringBuilder();
-                sb.AppendLine($"{thisBook.BookInfo.Name} -> {thisBook.Key.Name}");
-                sb.AppendLine($"{otherBook.BookInfo.Name} -> {otherBook.Key.Name}");
-                sb.AppendLine($"{comparerResult.Name.Diff:0.00}");
-                sb.AppendLine();
-                sb.AppendLine($"{thisBook.BookInfo.Authors}");
-                sb.AppendLine($"{otherBook.BookInfo.Authors}");
-                sb.AppendLine($"{comparerResult.Author.Diff:0.00}");
-                sb.AppendLine();
-                
-                _logger.Info(sb.ToString);
+                if (_logger.IsDebugEnabled) {
+                    var sb = new StringBuilder();
+                    sb.AppendLine($"{thisBook.BookInfo.Name} -> {thisBook.Key.Name}");
+                    sb.AppendLine($"{otherBook.BookInfo.Name} -> {otherBook.Key.Name}");
+                    sb.AppendLine($"{comparerResult.Name.Diff:0.00}");
+                    sb.AppendLine();
+                    sb.AppendLine($"{thisBook.BookInfo.Authors}");
+                    sb.AppendLine($"{otherBook.BookInfo.Authors}");
+                    sb.AppendLine($"{comparerResult.Author.Diff:0.00}");
+                    sb.AppendLine();
+
+                    _logger.Debug(sb.ToString);
+                }
             }
-            
+
             return result;
         }
 
@@ -122,10 +124,14 @@ namespace Book.Comparer.Logic {
             var books = await _compareBookGetter.Get();
             var wordToBooks = CreateWordToBooksMap(books);
             
-            var findSimilarBlock = new TransformBlock<CompareBook, SaveResult>(book => FindSimilar(book, wordToBooks), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _comparerConfig.MaxThread });
+            var findSimilarBlock = new TransformBlock<CompareBook, SaveResult>(book => FindSimilar(book, wordToBooks), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = _comparerConfig.MaxThread, EnsureOrdered = false});
             findSimilarBlock.CompleteMessage(_logger, "Закончили сравнение всех книг. Ждем сохранения.");
-            
-            var updateBooks = new ActionBlock<SaveResult>(_similarSaver.Save);
+
+            var i = books.Count(b => b.BookInfo.Compared);
+            var updateBooks = new ActionBlock<SaveResult>(async t => {
+                await _similarSaver.Save(t);
+                _logger.Info($"{++i}/{books.Count}");
+            });
             updateBooks.CompleteMessage(_logger, "Сохранение завершено.");
 
             findSimilarBlock.LinkTo(updateBooks);
