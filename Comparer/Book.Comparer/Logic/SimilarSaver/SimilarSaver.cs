@@ -17,20 +17,15 @@ namespace Book.Comparer.Logic.SimilarSaver {
             
             foreach (var similarBook in saveResult.SimilarBooks) {
                 lock (similarBook.SimilarBooks) {
-                    lock (similarBook.SimilarBibs) {
-                        var update = Builders<BookInfo>.Update
-                            .Set(t => t.SimilarBooks, similarBook.SimilarBooks)
-                            .Set(t => t.SimilarBibs, similarBook.SimilarBibs);
+                    var update = Builders<BookInfo>.Update
+                        .Set(t => t.SimilarBooks, similarBook.SimilarBooks);
                         
                         compared &= _repository.Update(GetEqualsFilter(similarBook), update).Result;
-                    }
                 }
             }
 
             lock (saveResult.Book.SimilarBooks) {
-                lock (saveResult.Book.SimilarBibs) {
-                    UpdateProcessedBook(saveResult.Book, compared).Wait();
-                }
+                UpdateProcessedBook(saveResult.Book, compared).Wait();
             }
 
             return Task.CompletedTask;
@@ -57,8 +52,7 @@ namespace Book.Comparer.Logic.SimilarSaver {
                 .Set(t => t.Authors, book.Authors)
                 .Set(t => t.Publisher, book.Publisher)
                 .Set(t => t.Name, book.Name)
-                .Set(t => t.SimilarBooks, book.SimilarBooks)
-                .Set(t => t.SimilarBibs, book.SimilarBibs);
+                .Set(t => t.SimilarBooks, book.SimilarBooks);
 
             await _repository.Update(GetEqualsFilter(book), update);
         }

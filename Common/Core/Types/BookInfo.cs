@@ -68,8 +68,7 @@ namespace Core.Types {
         /// </summary>
         public int Pages;
 
-        public HashSet<SimilarInfo> SimilarBooks;
-        public HashSet<SimilarInfo> SimilarBibs;
+        public Dictionary<string, HashSet<SimilarInfo>> SimilarBooks;
 
         public bool Compared;
 
@@ -93,15 +92,15 @@ namespace Core.Types {
         public void AddSimilar(BookInfo book, BookComparerResult compareResult) {
             var similarInfo = new SimilarInfo(book, compareResult);
 
-            if (book.ElsName == Const.BIB_ELS) {
-                lock (SimilarBibs) {
-                    SimilarBibs.Add(similarInfo);
+            lock (SimilarBooks) {
+                if (!SimilarBooks.TryGetValue(book.ElsName, out var similar)) {
+                    similar = new HashSet<SimilarInfo>();
+                    SimilarBooks[book.ElsName] = similar;
                 }
-            } else {
-                lock (SimilarBooks) {
-                    SimilarBooks.Add(similarInfo);
-                }
+                
+                similar.Add(similarInfo);
             }
+
         }
     }
 }
