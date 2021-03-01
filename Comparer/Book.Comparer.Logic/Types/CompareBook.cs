@@ -22,7 +22,9 @@ namespace Book.Comparer.Logic.Types {
         public static CompareBook Create(BookInfo bookInfo, Normalizer normalizer) {
             var result = new CompareBook(bookInfo);
 
-            result.BookInfo.SimilarBooks ??= new Dictionary<string, HashSet<SimilarInfo>>();
+            if (result.BookInfo.SimilarBooks == null || !result.BookInfo.Compared) {
+                result.BookInfo.SimilarBooks = new Dictionary<string, HashSet<SimilarInfo>>();
+            }
 
             result.Key = new CompareBookKey()
                 .WithName(bookInfo.Name, normalizer)

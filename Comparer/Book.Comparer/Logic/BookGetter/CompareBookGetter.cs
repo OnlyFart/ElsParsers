@@ -27,6 +27,8 @@ namespace Book.Comparer.Logic.BookGetter {
         private Task<IReadOnlyCollection<BookInfo>> GetBooks() {
             ProjectionDefinition<BookInfo, BookInfo> bookProj = Builders<BookInfo>.Projection
                 .Exclude(b => b.Bib)
+                .Exclude(b => b.ISBN)
+                .Exclude(b => b.ISSN)
                 .Exclude(b => b.Year)
                 .Exclude(b => b.Pages);
 
