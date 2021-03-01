@@ -13,5 +13,6 @@ namespace Book.Comparer.Logic.Configs {
 
     public class Lists {
         public List<string> NonSingAuthorWords { get; set; }
+        public List<string> NonSignBibWords { get; set; }
     }
 }

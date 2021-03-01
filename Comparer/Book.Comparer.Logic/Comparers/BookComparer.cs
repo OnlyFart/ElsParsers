@@ -43,7 +43,7 @@ namespace Book.Comparer.Logic.Comparers {
             // Если по левештейну строки ладеки друг от друга, то пытаемся поределить похожесть на основе пересечения слов
             return levensteinDiff.Success ? 
                 levensteinDiff : 
-                CheckIntersectDiff(book1.Key.NameWords, book2.Key.NameWords, _bookComparerConfig.IntersectBorder);
+                CheckIntersectDiff(book1.Key.NameTokens, book2.Key.NameTokens, _bookComparerConfig.IntersectBorder);
         }
         
         /// <summary>
