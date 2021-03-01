@@ -32,12 +32,7 @@ namespace Book.Comparer.Logic.BookGetter {
                 .Exclude(b => b.Year)
                 .Exclude(b => b.Pages);
 
-            var bookFilter = Builders<BookInfo>.Filter
-                .Where(t => t.Name != null && 
-                    t.Name.Length > 0 && 
-                    t.Authors != null && 
-                    t.Authors.Length > 0 && 
-                    t.ElsName != Const.BIB_ELS);
+            var bookFilter = Builders<BookInfo>.Filter.Where(t => t.ElsName != Const.BIB_ELS);
 
             return _repository.Read(bookFilter, bookProj);  
         }
@@ -45,6 +40,7 @@ namespace Book.Comparer.Logic.BookGetter {
         private Task<IReadOnlyCollection<BookInfo>> GetBibBooks() {
             var bibBookProj = Builders<BookInfo>.Projection.Expression(t => t);
             var bibBookFilter = Builders<BookInfo>.Filter.Where(t => t.ElsName == Const.BIB_ELS);
+            
             return _repository.Read(bibBookFilter, bibBookProj);
         }
 
@@ -77,7 +73,11 @@ namespace Book.Comparer.Logic.BookGetter {
 
             _logger.Info("Начинаю преобразование книг в сравниваемые");
 
-            return (await books).Union(await bibBooks).AsParallel().Select(book => CompareBook.Create(book, _normalizer)).ToList();
+            return (await books)
+                .Union(await bibBooks)
+                .AsParallel()
+                .Select(book => CompareBook.Create(book, _normalizer))
+                .ToList();
         }
 
         private BibParser GetBibParser(IReadOnlyCollection<BookInfo> books) {
@@ -111,9 +111,10 @@ namespace Book.Comparer.Logic.BookGetter {
         }
         
         private static HashSet<string> GetPublishers(IEnumerable<BookInfo> books) {
-            return books.Where(book => !string.IsNullOrWhiteSpace(book.Publisher))
+            return books
                 .Select(book => book.Publisher.Clean().ToLowerInvariant())
-                .ToHashSet();
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
         }
         
         private static IEnumerable<string> GetTokens(string bib, int minLength = 1) {
