@@ -13,12 +13,11 @@ using Parser.Core.Logic;
 
 namespace StudentLibrary.Parser.Logic {
     public class Parser : ParserBase {
-        public Parser(IParserConfigBase config,
-            IRepository<BookInfo> provider) : base(config, provider) { }
+        public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) { }
         
         protected override string ElsName => "StudentLibrary";
         
-        private static Uri GetUrl(int page) => new Uri($"https://www.studentlibrary.ru/ru/catalogue/switch_kit/x-total/-esf2k2z11-year-dec-page-{page}.html");
+        private static Uri GetUrl(int page) => new($"https://www.studentlibrary.ru/ru/catalogue/switch_kit/x-total/-esf2k2z11-year-dec-page-{page}.html");
 
         private async Task<BookInfo> GetBook(HttpClient client, Uri uri) {
             _logger.Info($"Получаем книгу {uri}");
@@ -32,9 +31,7 @@ namespace StudentLibrary.Parser.Logic {
             var id = uri.Segments.Last().Split(".")[0];
             var detailedDescriptionBlock = doc.DocumentNode.GetByFilterFirst("div", "reader-info");
             var book = new BookInfo(id, ElsName) {
-                Name = doc.DocumentNode.GetByFilterFirst("h2")
-                    ?.InnerText,
-                Bib = doc.DocumentNode.GetByFilterFirst("div", "wrap-annotation-sticker")?.GetByFilterFirst("span", "value")?.InnerText
+                Name = doc.DocumentNode.GetByFilterFirst("h2")?.InnerText
             };
 
             foreach (var node in detailedDescriptionBlock.ChildNodes) {
@@ -49,8 +46,8 @@ namespace StudentLibrary.Parser.Logic {
                
                 if (name.Contains("Авторы")) {
                     book.Authors = value;
-                }
-                else if (name.Contains("Для каталога")) {
+                } else if (name.Contains("Для каталога")) {
+                    book.Bib = value;
                     int.TryParse(value.Split('-')
                         .FirstOrDefault(x => x.Contains(" с."))
                         ?.Trim()
@@ -63,8 +60,7 @@ namespace StudentLibrary.Parser.Logic {
                     }
                 } else if (name.Contains("Издательство")) {
                     book.Publisher = value;
-                }
-                else if (name.Contains("Год издания")) {
+                } else if (name.Contains("Год издания")) {
                     book.Year = value;
                 } 
             }
@@ -86,57 +82,28 @@ namespace StudentLibrary.Parser.Logic {
                     .Select(href => new Uri(uri, href));
         }
 
-        private static async Task<int> GetMaxPageCount(HttpClient client,
-            Uri uri) {
-
+        private static async Task<int> GetMaxPageCount(HttpClient client, Uri uri) {
             var doc = await client.GetHtmlDoc(uri);
 
             return doc == default
                 ? 1
                 : doc.DocumentNode.GetByFilterFirst("ul", "pagination-ros-num va-m")
-                    ?.ChildNodes.Select(node => int.TryParse(node.InnerText, out var page)
-                        ? page
-                        : 1)
+                    ?.ChildNodes.Select(node => int.TryParse(node.InnerText, out var page) ? page : 1)
                     .Max() ?? 1;
         }
 
-        private static IEnumerable<Uri> Filter(IEnumerable<Uri> uris,
-            ISet<string> processed) {
+        private static IEnumerable<Uri> Filter(IEnumerable<Uri> uris, ISet<string> processed) {
             foreach (var uri in uris) {
-                var idStr = uri.Segments.Last()
-                    .Split(".")[0];
+                var idStr = uri.Segments.Last().Split(".")[0];
 
                 if (processed.Add(idStr)) {
                     yield return uri;
                 }
             }
         }
-        
-        private static KeyValuePair<string, string> TryParseCookies(string cookie) {
-            if (cookie.Contains("rdsssr")) {
-                return new KeyValuePair<string, string>("rdsssr", cookie.Split(new[] {
-                        "; "
-                    }, StringSplitOptions.None)
-                    .First()
-                    .Split("rdsssr=")
-                    .Last()); 
-            }
 
-            if (cookie.Contains("rdsbwid")) {
-                return new KeyValuePair<string,string>("rdsbwid", cookie.Split(new[] {
-                        "; "
-                    }, StringSplitOptions.None)
-                    .First()
-                    .Split("rdsbwid=")
-                    .Last());
-            }
-
-            return new KeyValuePair<string, string>(cookie, cookie);
-        }
-
-        protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client,
-            ISet<string> processed) {
-            var pagesCount = GetMaxPageCount(client, GetUrl(1));
+        protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
+            var pagesCount = await GetMaxPageCount(client, GetUrl(1));
 
             var getPageBlock = new TransformBlock<Uri, IEnumerable<Uri>>(async url => await GetBookLinks(client, url));
             getPageBlock.CompleteMessage(_logger, "Получение всех ссылок на книги успешно завершено. Ждем загрузки всех книг.");
@@ -155,17 +122,12 @@ namespace StudentLibrary.Parser.Logic {
             getBookBlock.LinkTo(batchBlock);
             batchBlock.LinkTo(saveBookBlock);
 
-            for (var i = 1; i <= await pagesCount; i++) {
+            _logger.Info($"Всего страниц для обходы {pagesCount}");
+            for (var i = 1; i <= pagesCount; i++) {
                 await getPageBlock.SendAsync(GetUrl(i));
             }
 
-            return new IDataflowBlock[] {
-                getPageBlock,
-                filterBlock,
-                getBookBlock,
-                batchBlock,
-                saveBookBlock
-            };
+            return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock };
         }
     }
 }
