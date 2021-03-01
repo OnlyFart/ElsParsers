@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Book.Comparer.Configs;
@@ -41,7 +40,7 @@ namespace Book.Comparer.Logic {
                     continue;
                 }
                 
-                foreach (var otherBook in otherBooks.Where(o => o.IsComparedBook && !thisBook.BookInfo.Equals(o.BookInfo))) {
+                foreach (var otherBook in otherBooks.Where(o => !thisBook.BookInfo.Equals(o.BookInfo))) {
                     yield return otherBook;
                 }
             }
@@ -65,27 +64,11 @@ namespace Book.Comparer.Logic {
 
             foreach (var otherBook in GetOtherBooks(thisBook, wordToBooks)) {
                 var comparerResult = _bookComparer.Compare(thisBook, otherBook);
-                if (!comparerResult.Author.Success || !comparerResult.Name.Success) {
-                    continue;
-                }
+                if (comparerResult.Author.Success && comparerResult.Name.Success) {
+                    thisBook.BookInfo.AddSimilar(otherBook.BookInfo, comparerResult);
+                    otherBook.BookInfo.AddSimilar(thisBook.BookInfo, comparerResult);
 
-                thisBook.BookInfo.AddSimilar(otherBook.BookInfo, comparerResult);
-                otherBook.BookInfo.AddSimilar(thisBook.BookInfo, comparerResult);
-
-                result.SimilarBooks.Add(otherBook.BookInfo);
-
-                if (_logger.IsDebugEnabled) {
-                    var sb = new StringBuilder();
-                    sb.AppendLine($"{thisBook.BookInfo.Name} -> {thisBook.Key.Name}");
-                    sb.AppendLine($"{otherBook.BookInfo.Name} -> {otherBook.Key.Name}");
-                    sb.AppendLine($"{comparerResult.Name.Diff:0.00}");
-                    sb.AppendLine();
-                    sb.AppendLine($"{thisBook.BookInfo.Authors}");
-                    sb.AppendLine($"{otherBook.BookInfo.Authors}");
-                    sb.AppendLine($"{comparerResult.Author.Diff:0.00}");
-                    sb.AppendLine();
-
-                    _logger.Debug(sb.ToString);
+                    result.SimilarBooks.Add(otherBook.BookInfo);
                 }
             }
 
