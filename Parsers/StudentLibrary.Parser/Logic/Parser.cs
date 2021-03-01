@@ -19,18 +19,11 @@ namespace StudentLibrary.Parser.Logic {
         protected override string ElsName => "StudentLibrary";
         
         private static Uri GetUrl(int page) => new Uri($"https://www.studentlibrary.ru/ru/catalogue/switch_kit/x-total/-esf2k2z11-year-dec-page-{page}.html");
-        private static HttpRequestMessage GetMessageWithCookies(Uri uri, string cookies) {
-            var message = new HttpRequestMessage(HttpMethod.Get, uri);
-            message.Headers.Add("Cookie", cookies);
 
-            return message;
-        }
-
-        private async Task<BookInfo> GetBook(HttpClient client,
-            Uri uri, string cookies) {
+        private async Task<BookInfo> GetBook(HttpClient client, Uri uri) {
             _logger.Info($"Получаем книгу {uri}");
-            using var message = GetMessageWithCookies(uri, cookies);
-            var doc = await client.GetHtmlDoc(message);
+           
+            var doc = await client.GetHtmlDoc(uri);
 
             if (doc == default) {
                 return default;
@@ -79,12 +72,10 @@ namespace StudentLibrary.Parser.Logic {
             return book;
         }
 
-        private static async Task<IEnumerable<Uri>> GetBookLinks(HttpClient client,
-            Uri uri, string cookies) {
+        private static async Task<IEnumerable<Uri>> GetBookLinks(HttpClient client, Uri uri) {
             _logger.Info($"Получаем данные для {uri}");
             
-            using var message = GetMessageWithCookies(uri, cookies);
-            var doc = await client.GetHtmlDoc(message);
+            var doc = await client.GetHtmlDoc(uri);
             
             return doc == default
                 ? Enumerable.Empty<Uri>()
@@ -96,10 +87,9 @@ namespace StudentLibrary.Parser.Logic {
         }
 
         private static async Task<int> GetMaxPageCount(HttpClient client,
-            Uri uri, string cookies) {
+            Uri uri) {
 
-            using var message = GetMessageWithCookies(uri, cookies);
-            var doc = await client.GetHtmlDoc(message);
+            var doc = await client.GetHtmlDoc(uri);
 
             return doc == default
                 ? 1
@@ -143,57 +133,17 @@ namespace StudentLibrary.Parser.Logic {
 
             return new KeyValuePair<string, string>(cookie, cookie);
         }
-        
-        private static async Task<string> PrepareCookies(HttpClient client) {
-            _logger.Info("Пытаемся получить куки и установить размер пачки на странице в 100 книг");
-            var response = await client.GetAsync("https://www.studentlibrary.ru/cgi-bin/mb4x");
-            var content = await response.Content.ReadAsStringAsync();
-            IDictionary<string, string> cookies = new Dictionary<string, string>();
-            var chfl = content.Split("CHFL")
-                .Last()
-                .Split("\"")
-                .FirstOrDefault(x => x.Contains("._ux"));
-            
-            cookies.Add("_gid", "GA1.1.1111111111.1111111111");
-            cookies.Add("_ga", "GA1.1.1111111111.1111111111");
-            foreach (var c in response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value) {
-                cookies.Add(TryParseCookies(c));
-            }
-
-            if (!cookies.Any()) {
-                return string.Empty;
-            }
-
-            var cookie = $"rdsssr={cookies["rdsssr"]}; rdsbwid={cookies["rdsbwid"]}; _gid={cookies["_gid"]}; _ga={cookies["_ga"]}";
-            
-            var url = "https://www.studentlibrary.ru/cgi-bin/mb4x?SSr=" + cookies["rdsssr"] + 
-                "&usr_data=FirstPg(sengine,list{null},)&clientWidth=693&scrollTop=0&search_only=" + 
-                "everywhere&GoToPg=1&_l4=100&_l4vars=100&Page_Cur=0&BODYZONE=default&trg_page_type=sengine&trg_page_id=list{null}" + 
-                "&_l1=ru&_l2=ru&_l3=ru&thispg_type=sengine&thispg_id=list{null}&CHFL=" 
-                + chfl + "&CLPg0=0&CLPg1=0&CITM=-1%27";
-
-
-            using var message = GetMessageWithCookies(new Uri(url), cookie);
-            await client.SendAsync(message);
-            return cookie;
-        }
 
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client,
             ISet<string> processed) {
-            var cookies = await PrepareCookies(client);
+            var pagesCount = GetMaxPageCount(client, GetUrl(1));
 
-            if (string.IsNullOrEmpty(cookies)) {
-                _logger.Info("Не смогли получить cookies.");
-            }
-
-            var pagesCount = GetMaxPageCount(client, GetUrl(1), cookies);
-
-            var getPageBlock = new TransformBlock<Uri, IEnumerable<Uri>>(async url => await GetBookLinks(client, url, cookies));
+            var getPageBlock = new TransformBlock<Uri, IEnumerable<Uri>>(async url => await GetBookLinks(client, url));
             getPageBlock.CompleteMessage(_logger, "Получение всех ссылок на книги успешно завершено. Ждем загрузки всех книг.");
 
             var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(uris => Filter(uris, processed));
 
-            var getBookBlock = new TransformBlock<Uri, BookInfo>(async url => await GetBook(client, url, cookies), GetParserOptions());
+            var getBookBlock = new TransformBlock<Uri, BookInfo>(async url => await GetBook(client, url), GetParserOptions());
             getBookBlock.CompleteMessage(_logger, "Загрузка всех книг завершено. Ждем сохранения.");
 
             var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
