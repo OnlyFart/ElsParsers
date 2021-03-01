@@ -105,7 +105,7 @@ namespace StudentLibrary.Parser.Logic {
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var pagesCount = await GetMaxPageCount(client, GetUrl(1));
 
-            var getPageBlock = new TransformBlock<Uri, IEnumerable<Uri>>(async url => await GetBookLinks(client, url));
+            var getPageBlock = new TransformBlock<Uri, IEnumerable<Uri>>(async url => await GetBookLinks(client, url), GetParserOptions());
             getPageBlock.CompleteMessage(_logger, "Получение всех ссылок на книги успешно завершено. Ждем загрузки всех книг.");
 
             var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(uris => Filter(uris, processed));
