@@ -68,6 +68,9 @@ namespace Core.Types {
         /// </summary>
         public int Pages;
 
+        /// <summary>
+        /// Коллекция "похожих" книг
+        /// </summary>
         public Dictionary<string, HashSet<SimilarInfo>> SimilarBooks;
 
         public bool Compared;

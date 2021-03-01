@@ -101,7 +101,7 @@ namespace Book.Comparer.Logic {
             _logger.Info("Создание обратного индекса.");
             var result = new Dictionary<string, List<CompareBook>>();
 
-            foreach (var book in books) {
+            foreach (var book in books.Where(b => b.IsComparedBook)) {
                 foreach (var word in book.Key.NameTokens) {
                     if (!result.TryGetValue(word, out var res)) {
                         res = new List<CompareBook>();
