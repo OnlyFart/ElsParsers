@@ -1,7 +1,7 @@
 # ElsParsers
 Парсеры популярных электронно-библиотечных систем
 
-* [Net.core 3.1](https://dotnet.microsoft.com/download/dotnet-core/3.1) 
+* [.net 5](https://dotnet.microsoft.com/download/dotnet/5.0) 
 * [MongoDb](https://www.mongodb.com/)
 
 ## Пример вызова сервиса

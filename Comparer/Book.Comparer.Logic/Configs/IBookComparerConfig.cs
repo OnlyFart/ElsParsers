@@ -1,7 +1,7 @@
 namespace Book.Comparer.Logic.Configs {
     public interface IBookComparerConfig {
-        double LevensteinBorder { get; set; }
+        double LevensteinBorder { get; init; }
         
-        double IntersectBorder { get; set; }
+        double IntersectBorder { get; init; }
     }
 }

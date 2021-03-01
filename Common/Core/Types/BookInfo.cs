@@ -1,0 +1,107 @@
+﻿using System.Collections.Generic;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+namespace Core.Types {
+    [BsonIgnoreExtraElements]
+    public class BookInfo {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="externalId">Идентификатор книги в библиотеке</param>
+        /// <param name="elsName">Название библиотеки</param>
+        public BookInfo(string externalId, string elsName) {
+            ExternalId = externalId;
+            ElsName = elsName;
+        }
+
+        [BsonIgnoreIfDefault, BsonIgnoreIfNull]
+        public ObjectId Id;
+
+        /// <summary>
+        /// Идентификатор книги
+        /// </summary>
+        public string ExternalId;
+
+        /// <summary>
+        /// Название библиотеки
+        /// </summary>
+        public string ElsName;
+
+        /// <summary>
+        /// Авторы кники
+        /// </summary>
+        public string Authors;
+
+        /// <summary>
+        /// ISBN
+        /// </summary>
+        public string ISBN;
+
+        /// <summary>
+        /// ISSN
+        /// </summary>
+        public string ISSN;
+
+        /// <summary>
+        /// Издательство
+        /// </summary>
+        public string Publisher;
+
+        /// <summary>
+        /// Название
+        /// </summary>
+        public string Name;
+
+        /// <summary>
+        /// Год издания
+        /// </summary>
+        public string Year;
+
+        /// <summary>
+        /// Библиографическое описание
+        /// </summary>
+        public string Bib;
+
+        /// <summary>
+        /// Кол-во страниц
+        /// </summary>
+        public int Pages;
+
+        public HashSet<SimilarInfo> SimilarBooks;
+        public HashSet<SimilarInfo> SimilarBibs;
+
+        public bool Compared;
+
+        public override bool Equals(object obj) {
+            if (ReferenceEquals(null, obj)) {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj)) {
+                return true;
+            }
+
+            var other = (BookInfo) obj;
+            return obj.GetType() == GetType() && Id == other.Id;
+        }
+
+        public override int GetHashCode() {
+            return Id.GetHashCode();
+        }
+
+        public void AddSimilar(BookInfo book, BookComparerResult compareResult) {
+            var similarInfo = new SimilarInfo(book, compareResult);
+
+            if (book.ElsName == Const.BIB_ELS) {
+                lock (SimilarBibs) {
+                    SimilarBibs.Add(similarInfo);
+                }
+            } else {
+                lock (SimilarBooks) {
+                    SimilarBooks.Add(similarInfo);
+                }
+            }
+        }
+    }
+}
