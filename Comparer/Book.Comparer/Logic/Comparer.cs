@@ -113,7 +113,7 @@ namespace Book.Comparer.Logic {
             var i = books.Count(b => b.BookInfo.Compared);
             var updateBooks = new ActionBlock<SaveResult>(async t => {
                 await _similarSaver.Save(t);
-                _logger.Info($"Обработано {++i}/{books.Count}");
+                _logger.Info($"Обработано {++i}/{books.Count}. ID = {t.Book.Id} Name = {t.Book.Name}");
             });
             updateBooks.CompleteMessage(_logger, "Сохранение завершено.");
 
