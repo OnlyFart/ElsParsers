@@ -29,7 +29,7 @@ namespace Core.Types {
         public string ElsName;
 
         /// <summary>
-        /// Авторы кники
+        /// Авторы книги
         /// </summary>
         public string Authors;
 
