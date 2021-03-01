@@ -87,11 +87,7 @@ namespace Book.Comparer.Logic.Types {
             for (var i = 0; i < length; i++) {
                 switch (i) {
                     case 0 when fio[i].Length == 1:
-                        return false;
-                }
-
-                switch (i > 0) {
-                    case true when fio[i].Length != 1:
+                    case > 0 when fio[i].Length != 1:
                         return false;
                 }
             }
