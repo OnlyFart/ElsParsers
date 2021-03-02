@@ -1,15 +1,15 @@
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Core.Types {
+    [BsonIgnoreExtraElements]
     public class SimilarInfo {
         public ObjectId BookId;
-        public string ElsName;
         public string ExternalId;
         public BookComparerResult ComparerResult;
         
         public SimilarInfo(BookInfo book, BookComparerResult comparerResult) {
             BookId = book.Id;
-            ElsName = book.ElsName;
             ExternalId = book.ExternalId;
             ComparerResult = comparerResult;
         }
