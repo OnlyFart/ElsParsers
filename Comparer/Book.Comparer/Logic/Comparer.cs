@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -66,9 +67,10 @@ namespace Book.Comparer.Logic {
                 var comparerResult = _bookComparer.Compare(thisBook, otherBook);
                 if (comparerResult.Author.Success && comparerResult.Name.Success) {
                     thisBook.BookInfo.AddSimilar(otherBook.BookInfo, comparerResult);
-                    otherBook.BookInfo.AddSimilar(thisBook.BookInfo, comparerResult);
 
-                    result.SimilarBooks.Add(otherBook.BookInfo);
+                    if (otherBook.BookInfo.AddSimilar(thisBook.BookInfo, comparerResult)) {
+                        result.SimilarBooks.Add(otherBook.BookInfo);
+                    }
                 }
             }
 
@@ -112,8 +114,9 @@ namespace Book.Comparer.Logic {
 
             var i = books.Count(b => b.BookInfo.Compared);
             var updateBooks = new ActionBlock<SaveResult>(async t => {
+                var sw = Stopwatch.StartNew();
                 await _similarSaver.Save(t);
-                _logger.Info($"Обработано {++i}/{books.Count}. ID = {t.Book.Id} Name = {t.Book.Name}");
+                _logger.Info($"Обработано {++i}/{books.Count} {sw.ElapsedMilliseconds}ms. ID = {t.Book.Id} Name = {t.Book.Name}");
             });
             updateBooks.CompleteMessage(_logger, "Сохранение завершено.");
 

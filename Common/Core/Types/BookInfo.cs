@@ -92,7 +92,7 @@ namespace Core.Types {
             return Id.GetHashCode();
         }
 
-        public void AddSimilar(BookInfo book, BookComparerResult compareResult) {
+        public bool AddSimilar(BookInfo book, BookComparerResult compareResult) {
             var similarInfo = new SimilarInfo(book, compareResult);
 
             lock (SimilarBooks) {
@@ -101,9 +101,8 @@ namespace Core.Types {
                     SimilarBooks[book.ElsName] = similar;
                 }
                 
-                similar.Add(similarInfo);
+                return similar.Add(similarInfo);
             }
-
         }
     }
 }

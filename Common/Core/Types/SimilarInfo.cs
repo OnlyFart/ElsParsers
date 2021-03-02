@@ -14,15 +14,16 @@ namespace Core.Types {
             ComparerResult = comparerResult;
         }
 
-        protected bool Equals(SimilarInfo other) {
-            return BookId.Equals(other.BookId);
-        }
-
         public override bool Equals(object obj) {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((SimilarInfo) obj);
+            if (ReferenceEquals(null, obj)) {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj)) {
+                return true;
+            }
+
+            return obj.GetType() == GetType() && BookId.Equals(((SimilarInfo) obj).BookId);
         }
 
         public override int GetHashCode() {
