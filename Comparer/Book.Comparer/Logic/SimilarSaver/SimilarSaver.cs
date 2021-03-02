@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using Book.Comparer.Types;
 using Core.Providers.Interfaces;
@@ -14,15 +15,15 @@ namespace Book.Comparer.Logic.SimilarSaver {
         
         public Task Save(SaveResult saveResult) {
             var compared = true;
-            
-            foreach (var similarBook in saveResult.SimilarBooks) {
+
+            Parallel.ForEach(saveResult.SimilarBooks, similarBook => {
                 lock (similarBook.SimilarBooks) {
                     var update = Builders<BookInfo>.Update
                         .Set(t => t.SimilarBooks, similarBook.SimilarBooks);
-                        
-                        compared &= _repository.Update(GetEqualsFilter(similarBook), update).Result;
+    
+                    compared &= _repository.Update(GetEqualsFilter(similarBook), update).Result;
                 }
-            }
+            });
 
             lock (saveResult.Book.SimilarBooks) {
                 UpdateProcessedBook(saveResult.Book, compared).Wait();
