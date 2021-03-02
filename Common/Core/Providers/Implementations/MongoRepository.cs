@@ -42,6 +42,21 @@ namespace Core.Providers.Implementations {
 
             return false;
         }
+        
+        public async Task<bool> UpdateMany(IReadOnlyCollection<WriteModel<T>> requests) {
+            if (requests.Count == 0) {
+                return true;
+            }
+            
+            try {
+                await _collection.BulkWriteAsync(requests);
+                return true;
+            } catch (Exception ex) {
+                _logger.Error(ex);
+            }
+
+            return false;
+        }
 
         public async Task<IReadOnlyCollection<TValue>> Read<TValue>(FilterDefinition<T> filter, ProjectionDefinition<T, TValue> projection) {
             _logger.Info($"Выполняю загрузку из {_config.DatabaseName}/{_config.CollectionName}");

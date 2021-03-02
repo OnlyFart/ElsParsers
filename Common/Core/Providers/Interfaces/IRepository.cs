@@ -12,6 +12,8 @@ namespace Core.Providers.Interfaces {
 
         Task<bool> Update(FilterDefinition<T> filter, UpdateDefinition<T> update);
 
+        Task<bool> UpdateMany(IReadOnlyCollection<WriteModel<T>> requests);
+
         Task CreateMany(IEnumerable<T> items);
     }
 }
