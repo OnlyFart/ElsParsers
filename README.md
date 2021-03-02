@@ -32,7 +32,7 @@ uraitparser --help
 * [Академия](https://academia-moscow.ru/)
 * [IBooks](https://ibooks.ru/)
 * [Book.ru](https://book.ru/)
-* [RuCont](https://lib.rucont.ru/) - только каталог книг
+* [RuCont](https://lib.rucont.ru/)
 * [BiblioRossica](http://www.bibliorossica.com/)
 * [StudentLibrary](https://www.studentlibrary.ru/)
 * [ProfSpo](https://profspo.ru/)
