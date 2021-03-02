@@ -15,9 +15,9 @@ using Parser.Core.Logic;
 
 namespace BiblioRossica.Parser.Logic {
     public class Parser : ParserBase {
-        private const int BOOKS_PER_PAGE = 100;
+        private const int BOOKS_PER_PAGE = 50;
         
-        private static readonly Uri _baseUrl = new Uri("http://www.bibliorossica.com");
+        private static readonly Uri _baseUrl = new("http://www.bibliorossica.com");
         
         public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) { }
         

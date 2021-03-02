@@ -66,7 +66,7 @@ namespace RuCont.Parser.Logic {
         private async Task<BookInfo> GetBook(HttpClient client, string id) {
             var book = await client.GetJson<FullInfo>(new Uri($"https://lib.rucont.ru/api/efd/{id}/full_info"));
             // Не смогли получить книгу, либо это вообще не книга
-            if (book == default || book.Type != 1) {
+            if (book == default) {
                 return default;
             }
 
