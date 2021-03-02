@@ -26,12 +26,12 @@ namespace ProfSpo.Parser.Logic {
                 return Array.Empty<IDataflowBlock>();
             }
 
-            var response = await GetSearchResponse(client, token, 1);
+            var response = await GetResponse(client, token, 1);
             
-            var getBooksBlock = new TransformBlock<int, Info>(async page => await GetSearchResponse(client, token, page), GetParserOptions());
+            var getBooksBlock = new TransformBlock<int, IEnumerable<BookInfo>>(async page => await GetBooks(client, token, page), GetParserOptions());
             getBooksBlock.CompleteMessage(_logger, "Загрузка всех книг завершено. Ждем сохранения.");
             
-            var filterBlock = new TransformManyBlock<Info, BookInfo>(info => Filter(info, processed));
+            var filterBlock = new TransformManyBlock<IEnumerable<BookInfo>, BookInfo>(books => Filter(books, processed));
             
             var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
             var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await SaveBooks(books));
@@ -49,42 +49,24 @@ namespace ProfSpo.Parser.Logic {
             return new IDataflowBlock[] {getBooksBlock, filterBlock, batchBlock, saveBookBlock};
         }
 
-        public IEnumerable<BookInfo> Filter(Info info, ISet<string> processed) {
-            foreach (var book in info.Data) {
-                if (processed.Add(book.Id.ToString())) {
-                    var result = new BookInfo(book.Id.ToString(), ElsName) {
-                        Authors = book.Authors,
-                        Bib = book.Bibliography,
-                        ISBN = book.ISBN,
-                        Name = book.Title,
-                        Year = book.Year,
-                        Publisher = book.Publishers
-                    };
-
-                    int.TryParse(result.Bib.Split('—')
-                        .FirstOrDefault(x => x.Contains(" c."))
-                        ?.Trim()
-                        .Split(' ')
-                        .First(), out result.Pages);
-
-                    if (string.IsNullOrWhiteSpace(result.ISBN) && result.Bib.Contains("ISBN", StringComparison.InvariantCultureIgnoreCase)) {
-                        result.ISBN = result.Bib.Split("ISBN", StringSplitOptions.RemoveEmptyEntries)[1].Trim()
-                            .Split(". ")
-                            .First();
-                    }
-
-                    yield return result;
-                }
-            }
+        private static IEnumerable<BookInfo> Filter(IEnumerable<BookInfo> books, ISet<string> processed) {
+            return books.Where(book => processed.Add(book.ExternalId));
         }
 
+        /// <summary>
+        /// Небольшой костыль. Что бы валидно работали запросы для этого сайта
+        /// </summary>
+        /// <param name="client"></param>
         private static void FillHttpClient(HttpClient client) {
             client.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");
         }
-        
-        private static async Task<Info> GetSearchResponse(HttpClient client, string token, int page) {
-            _logger.Info($"Запрашиваем страницу {page}");
 
+        private static async Task<Info> GetResponse(HttpClient client, string token, int page) {
+            var apiResponse = await client.PostJson<ApiResponse>(new Uri("https://profspo.ru/catalog/search"), GetParams(token, page));
+            return apiResponse?.Info ?? new Info();
+        }
+
+        private static FormUrlEncodedContent GetParams(string token, int page) {
             var values = new KeyValuePair<string, string>[] {
                 new("title", ""),
                 new("authors", ""),
@@ -104,8 +86,40 @@ namespace ProfSpo.Parser.Logic {
                 new("page", page.ToString())
             };
 
-            var apiResponse = await client.PostJson<ApiResponse>(new Uri("https://profspo.ru/catalog/search"), new FormUrlEncodedContent(values));
-            return apiResponse?.Info ?? new Info();
+            return new FormUrlEncodedContent(values);
+        }
+        
+        private async Task<IEnumerable<BookInfo>> GetBooks(HttpClient client, string token, int page) {
+            _logger.Info($"Запрашиваем страницу {page}");
+
+            var result = new List<BookInfo>();
+            foreach (var apiBook in (await GetResponse(client, token, page)).Data) {
+                var book = new BookInfo(apiBook.Id.ToString(), ElsName) {
+                    Authors = apiBook.Authors,
+                    Bib = apiBook.Bibliography,
+                    ISBN = apiBook.ISBN,
+                    Name = apiBook.Title,
+                    Year = apiBook.Year,
+                    Publisher = apiBook.Publishers
+                };
+
+                int.TryParse(book.Bib.Split('—')
+                    .FirstOrDefault(x => x.Contains(" c."))
+                    ?.Trim()
+                    .Split(' ')
+                    .First(), out book.Pages);
+
+                if (string.IsNullOrWhiteSpace(book.ISBN)
+                    && book.Bib.Contains("ISBN", StringComparison.InvariantCultureIgnoreCase)) {
+                    book.ISBN = book.Bib.Split("ISBN", StringSplitOptions.RemoveEmptyEntries)[1].Trim()
+                        .Split(". ")
+                        .First();
+                }
+                
+                result.Add(book);
+            }
+
+            return result;
         }
 
         private static async Task<string> GetToken(HttpClient client) {
