@@ -18,7 +18,10 @@ namespace Parser.Core.Extensions {
         /// </summary>
         /// <returns></returns>
         public static HttpClient GetClient(IParserConfigBase config) {
-            var handler = new HttpClientHandler{ AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate};
+            var handler = new HttpClientHandler {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            };
+            
             if (!string.IsNullOrEmpty(config.Proxy)) {
                 var split = config.Proxy.Split(":");
                 handler.Proxy = new WebProxy(split[0], int.Parse(split[1])); 
