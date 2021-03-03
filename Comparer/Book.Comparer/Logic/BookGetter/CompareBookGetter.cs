@@ -41,53 +41,48 @@ namespace Book.Comparer.Logic.BookGetter {
                     string.IsNullOrWhiteSpace(book.Publisher)) &&
                 !string.IsNullOrWhiteSpace(book.Bib);
         }
-        
-        private void ParseBibBooks(IReadOnlyCollection<BookInfo> books) {
-            var toParse = books.Where(NeedParseBib).ToList();
-            if (toParse.Count <= 0) {
-                return;
-            }
-            
-            _logger.Info($"Обнаружено {toParse.Count} книг, для который необходимо распарсить БЗ.");
-            var parser = CreateBibParser(books);
-            _logger.Info("Создание парсера закончено. Начинаю парсинг.");
-                
-            foreach (var book in toParse) {
+
+        private CompareBook CreateCompareBook(BookInfo book, BibParser parser) {
+            if (NeedParseBib(book)) {
                 var (authors, name, publisher) = parser.Parse(book.Bib);
 
                 if (string.IsNullOrWhiteSpace(book.Authors)) {
                     book.Authors = authors;
                 }
-                    
+
                 if (string.IsNullOrWhiteSpace(book.Name)) {
                     book.Name = name;
                 }
-                    
+
                 if (string.IsNullOrWhiteSpace(book.Publisher)) {
                     book.Publisher = publisher;
                 }
             }
-                
-            _logger.Info("Парсинг закончен.");
+
+            return CompareBook.Create(book, _normalizer);
         }
-        
+
         public async Task<IReadOnlyCollection<CompareBook>> Get() {
             var books = await GetBooks();
-            ParseBibBooks(books);
-
+            var parser = CreateBibParser(books);
+            
             _logger.Info("Начинаю преобразование книг в сравниваемые");
 
             return books
                 .AsParallel()
-                .Select(book => CompareBook.Create(book, _normalizer))
+                .Select(book => CreateCompareBook(book, parser))
                 .ToList();
         }
 
         private BibParser CreateBibParser(IReadOnlyCollection<BookInfo> books) {
+            _logger.Info("Создаю парсер БЗ");
+            
             var authors = GetAuthors(books, _normalizer);
             var publishers = GetPublishers(books);
             
             var config = new BibParserConfig(authors, publishers);
+            
+            _logger.Info("Парсер БЗ создан");
             return new BibParser(_normalizer, config);
         }
         
