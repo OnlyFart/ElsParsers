@@ -116,7 +116,7 @@ namespace Book.Comparer.Logic {
             var updateBooks = new ActionBlock<SaveResult>(async t => {
                 var sw = Stopwatch.StartNew();
                 await _similarSaver.Save(t);
-                _logger.Info($"Обработано {++i}/{books.Count} {sw.ElapsedMilliseconds}ms. ID = {t.Book.Id} Name = {t.Book.Name}");
+                _logger.Info($"Обработано {++i}/{books.Count}. Сохранение заняло {sw.ElapsedMilliseconds}ms. Похожих книг {t.Book.SimilarBooks.SelectMany(b => b.Value).Count()}. ID = {t.Book.Id} Name = {t.Book.Name}");
             });
             updateBooks.CompleteMessage(_logger, "Сохранение завершено.");
 

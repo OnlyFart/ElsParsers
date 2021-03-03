@@ -26,6 +26,8 @@ namespace Book.Comparer.Logic.Types {
                 result.BookInfo.SimilarBooks = new Dictionary<string, HashSet<SimilarInfo>>();
             }
 
+            result.BookInfo.Bib = null;
+
             result.Key = new CompareBookKey()
                 .WithName(bookInfo.Name, normalizer)
                 .WithAuthors(bookInfo.Authors, normalizer);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Web;
 using Book.Comparer.Logic.Configs;
 using Book.Comparer.Logic.Types;
 using Book.Comparer.Logic.Utils;
@@ -34,7 +35,7 @@ namespace Book.Comparer.Logic.Logic {
         }
 
         public BibParseResult Parse(string bib) {
-            var cleanBib = bib.Clean();
+            var cleanBib = HttpUtility.HtmlDecode(bib ?? string.Empty).Clean();
             
             var bibAuthors = new HashSet<string>();
             var bibName = new List<string>();

@@ -26,7 +26,6 @@ namespace Book.Comparer.Logic.BookGetter {
 
         private Task<IReadOnlyCollection<BookInfo>> GetBooks() {
             ProjectionDefinition<BookInfo, BookInfo> bookProj = Builders<BookInfo>.Projection
-                .Exclude(b => b.Bib)
                 .Exclude(b => b.ISBN)
                 .Exclude(b => b.ISSN)
                 .Exclude(b => b.Year)
@@ -45,24 +44,37 @@ namespace Book.Comparer.Logic.BookGetter {
         }
 
         private void ParseBibBooks(IReadOnlyCollection<BookInfo> books, IReadOnlyCollection<BookInfo> bibBooks) {
-            var toParse = bibBooks.Where(b => !b.Compared).ToList();
-            if (toParse.Count <= 0) {
+            var bibToParse = bibBooks.Where(b => !b.Compared).ToList();
+            var noAuthors = books.Where(b => !b.Compared && string.IsNullOrWhiteSpace(b.Authors) && !string.IsNullOrWhiteSpace(b.Bib)).ToList();
+
+            if (bibToParse.Count <= 0 && noAuthors.Count <= 0) {
                 return;
             }
-            
-            _logger.Info($"Обнаружено {toParse.Count} книг, для которых необходимо распарсить БЗ.");
+
+            _logger.Info($"Обнаружено {bibToParse.Count} БЗ, которые необходимо распарсить.");
             var parser = GetBibParser(books);
             _logger.Info("Создание парсера закончено. Начинаю парсинг.");
                 
-            foreach (var bibBook in toParse) {
+            foreach (var bibBook in bibToParse) {
                 var (authors, name, publisher) = parser.Parse(bibBook.Bib);
 
                 bibBook.Authors = authors;
                 bibBook.Name = name;
                 bibBook.Publisher = publisher;
             }
+
+            
+            if (noAuthors.Count > 0) {
+                _logger.Info($"Обнаружено {noAuthors.Count} книг без авторов. Пытаемся получить авторов из БЗ");
                 
-            _logger.Info("Парсинг БЗ закончен.");
+                foreach (var noAuthor in noAuthors) {
+                    var (authors, _, _) = parser.Parse(noAuthor.Bib);
+
+                    noAuthor.Authors = authors;
+                }
+            }
+                
+            _logger.Info("Парсинг закончен.");
         }
         
         public async Task<IReadOnlyCollection<CompareBook>> Get() {
