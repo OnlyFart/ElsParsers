@@ -31,21 +31,12 @@ namespace Book.Comparer.Logic.BookGetter {
                 .Exclude(b => b.Year)
                 .Exclude(b => b.Pages);
 
-            var bookFilter = Builders<BookInfo>.Filter.Where(t => t.ElsName != Const.BIB_ELS);
-
-            return _repository.Read(bookFilter, bookProj);  
+            return _repository.Read(Builders<BookInfo>.Filter.Empty, bookProj);  
         }
 
-        private Task<IReadOnlyCollection<BookInfo>> GetBibBooks() {
-            var bibBookProj = Builders<BookInfo>.Projection.Expression(t => t);
-            var bibBookFilter = Builders<BookInfo>.Filter.Where(t => t.ElsName == Const.BIB_ELS);
-            
-            return _repository.Read(bibBookFilter, bibBookProj);
-        }
-
-        private void ParseBibBooks(IReadOnlyCollection<BookInfo> books, IReadOnlyCollection<BookInfo> bibBooks) {
-            var bibToParse = bibBooks.Where(b => !b.Compared).ToList();
-            var noAuthors = books.Where(b => !b.Compared && string.IsNullOrWhiteSpace(b.Authors) && !string.IsNullOrWhiteSpace(b.Bib)).ToList();
+        private void ParseBibBooks(IReadOnlyCollection<BookInfo> books) {
+            var bibToParse = books.Where(b => !b.Compared && b.ElsName == Const.BIB_ELS).ToList();
+            var noAuthors = books.Where(b => !b.Compared && b.ElsName != Const.BIB_ELS && string.IsNullOrWhiteSpace(b.Authors) && !string.IsNullOrWhiteSpace(b.Bib)).ToList();
 
             if (bibToParse.Count <= 0 && noAuthors.Count <= 0) {
                 return;
@@ -78,15 +69,12 @@ namespace Book.Comparer.Logic.BookGetter {
         }
         
         public async Task<IReadOnlyCollection<CompareBook>> Get() {
-            var books = GetBooks();
-            var bibBooks = GetBibBooks();
-
-            ParseBibBooks(await books, await bibBooks);
+            var books = await GetBooks();
+            ParseBibBooks(books);
 
             _logger.Info("Начинаю преобразование книг в сравниваемые");
 
-            return (await books)
-                .Union(await bibBooks)
+            return books
                 .AsParallel()
                 .Select(book => CompareBook.Create(book, _normalizer))
                 .ToList();

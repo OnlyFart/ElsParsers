@@ -42,12 +42,10 @@ namespace Book.Comparer.Logic.Logic {
             var bibPublisher = new HashSet<string>();
             
             foreach (var candidate in GetPublishers(GetTokens(cleanBib.ToLowerInvariant()).ToArray()).OrderByDescending(t => t.Length)) {
-                if (!cleanBib.Contains(candidate, StringComparison.InvariantCultureIgnoreCase)) {
-                    continue;
+                if (cleanBib.Contains(candidate, StringComparison.InvariantCultureIgnoreCase)) {
+                    cleanBib = cleanBib.Replace(candidate, " ", StringComparison.InvariantCultureIgnoreCase);
+                    bibPublisher.Add(candidate);
                 }
-                
-                cleanBib = cleanBib.Replace(candidate, " ", StringComparison.InvariantCultureIgnoreCase);
-                bibPublisher.Add(candidate);
             }
 
             foreach (var token in GetTokens(cleanBib).Where(token => !_normalizer.NonSignBibWords.Contains(token))) {
