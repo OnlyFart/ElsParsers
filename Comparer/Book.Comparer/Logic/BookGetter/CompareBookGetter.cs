@@ -34,34 +34,37 @@ namespace Book.Comparer.Logic.BookGetter {
             return _repository.Read(Builders<BookInfo>.Filter.Empty, bookProj);  
         }
 
+        private static bool NeedParseBib(BookInfo book) {
+            return !book.Compared &&
+                (string.IsNullOrWhiteSpace(book.Authors) ||
+                    string.IsNullOrWhiteSpace(book.Name) ||
+                    string.IsNullOrWhiteSpace(book.Publisher)) &&
+                !string.IsNullOrWhiteSpace(book.Bib);
+        }
+        
         private void ParseBibBooks(IReadOnlyCollection<BookInfo> books) {
-            var bibToParse = books.Where(b => !b.Compared && b.ElsName == Const.BIB_ELS).ToList();
-            var noAuthors = books.Where(b => !b.Compared && b.ElsName != Const.BIB_ELS && string.IsNullOrWhiteSpace(b.Authors) && !string.IsNullOrWhiteSpace(b.Bib)).ToList();
-
-            if (bibToParse.Count <= 0 && noAuthors.Count <= 0) {
+            var toParse = books.Where(NeedParseBib).ToList();
+            if (toParse.Count <= 0) {
                 return;
             }
-
-            _logger.Info($"Обнаружено {bibToParse.Count} БЗ, которые необходимо распарсить.");
-            var parser = GetBibParser(books);
+            
+            _logger.Info($"Обнаружено {toParse.Count} книг, для который необходимо распарсить БЗ.");
+            var parser = CreateBibParser(books);
             _logger.Info("Создание парсера закончено. Начинаю парсинг.");
                 
-            foreach (var bibBook in bibToParse) {
-                var (authors, name, publisher) = parser.Parse(bibBook.Bib);
+            foreach (var book in toParse) {
+                var (authors, name, publisher) = parser.Parse(book.Bib);
 
-                bibBook.Authors = authors;
-                bibBook.Name = name;
-                bibBook.Publisher = publisher;
-            }
-
-            
-            if (noAuthors.Count > 0) {
-                _logger.Info($"Обнаружено {noAuthors.Count} книг без авторов. Пытаемся получить авторов из БЗ");
-                
-                foreach (var noAuthor in noAuthors) {
-                    var (authors, _, _) = parser.Parse(noAuthor.Bib);
-
-                    noAuthor.Authors = authors;
+                if (string.IsNullOrWhiteSpace(book.Authors)) {
+                    book.Authors = authors;
+                }
+                    
+                if (string.IsNullOrWhiteSpace(book.Name)) {
+                    book.Name = name;
+                }
+                    
+                if (string.IsNullOrWhiteSpace(book.Publisher)) {
+                    book.Publisher = publisher;
                 }
             }
                 
@@ -80,7 +83,7 @@ namespace Book.Comparer.Logic.BookGetter {
                 .ToList();
         }
 
-        private BibParser GetBibParser(IReadOnlyCollection<BookInfo> books) {
+        private BibParser CreateBibParser(IReadOnlyCollection<BookInfo> books) {
             var authors = GetAuthors(books, _normalizer);
             var publishers = GetPublishers(books);
             
