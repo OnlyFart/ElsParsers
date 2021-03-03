@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Book.Comparer.Types;
@@ -22,7 +23,7 @@ namespace Book.Comparer.Logic.SimilarSaver {
 
                 foreach (var similarBook in saveResult.SimilarBooks) {
                     lock (similarBook.SimilarBooks) {
-                        var clone = new Dictionary<string, HashSet<SimilarInfo>>(similarBook.SimilarBooks);
+                        var clone = similarBook.SimilarBooks.ToDictionary(t => t.Key, t => t.Value.ToHashSet());
                         var update = Builders<BookInfo>.Update.Set(t => t.SimilarBooks, clone);
                         updates.Add(new UpdateManyModel<BookInfo>(GetEqualsFilter(similarBook), update));
                     }
