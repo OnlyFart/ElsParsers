@@ -92,8 +92,8 @@ namespace Core.Types {
             return Id.GetHashCode();
         }
 
-        public bool AddSimilar(BookInfo book, BookComparerResult compareResult) {
-            var similarInfo = new SimilarInfo(book, compareResult);
+        public bool AddSimilar(BookInfo book, double coeff) {
+            var similarInfo = new SimilarInfo(book, coeff);
 
             lock (SimilarBooks) {
                 if (!SimilarBooks.TryGetValue(book.ElsName, out var similar)) {

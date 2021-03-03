@@ -65,10 +65,10 @@ namespace Book.Comparer.Logic {
 
             foreach (var otherBook in GetOtherBooks(thisBook, wordToBooks)) {
                 var comparerResult = _bookComparer.Compare(thisBook, otherBook);
-                if (comparerResult.Author.Success && comparerResult.Name.Success) {
-                    thisBook.BookInfo.AddSimilar(otherBook.BookInfo, comparerResult);
+                if (comparerResult.Success) {
+                    thisBook.BookInfo.AddSimilar(otherBook.BookInfo, comparerResult.Coeff);
 
-                    if (otherBook.BookInfo.AddSimilar(thisBook.BookInfo, comparerResult)) {
+                    if (otherBook.BookInfo.AddSimilar(thisBook.BookInfo, comparerResult.Coeff)) {
                         result.SimilarBooks.Add(otherBook.BookInfo);
                     }
                 }

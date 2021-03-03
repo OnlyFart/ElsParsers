@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Book.Comparer.Logic.Configs;
 
@@ -100,22 +101,22 @@ namespace Book.Comparer.Logic.Utils {
         /// </summary>
         /// <param name="split"></param>
         /// <returns></returns>
-        public string FirstFullOtherFirst(string[] split) {
+        public static string FirstFullOtherFirst(string[] split) {
             if (split.Length == 0) {
                 return string.Empty;
             }
             
-            var result = string.Empty;
+            var result = new StringBuilder();
             for (var i = 0; i < split.Length; i++) {
                 if (i == 0) {
-                    result += split[i];
+                    result.Append(split[i]);
                     continue;
                 }
 
-                result += split[i].FirstOrDefault();
+                result.Append(split[i][0]);
             }
 
-            return result;
+            return result.ToString();
         }
     }
 }

@@ -1,5 +1,5 @@
 namespace Core.Types {
-    public class ComparerResult {
+    public struct ComparerResult {
         /// <summary>
         /// Разница в "процентах" между двумя строками
         /// </summary>
@@ -14,14 +14,10 @@ namespace Core.Types {
             Diff = diff;
             Success = success;
         }
-
-        public ComparerResult() : this(0, false) {
-                
-        }
     }
 
-    public class BookComparerResult {
-        public ComparerResult Name;
-        public ComparerResult Author;
+    public struct BookComparerResult {
+        public bool Success;
+        public double Coeff;
     }
 }

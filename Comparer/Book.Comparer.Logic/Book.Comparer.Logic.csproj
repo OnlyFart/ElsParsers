@@ -8,4 +8,8 @@
       <ProjectReference Include="..\..\Common\Core\Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Quickenshtein" Version="1.5.0" />
+    </ItemGroup>
+
 </Project>

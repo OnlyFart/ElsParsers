@@ -6,12 +6,12 @@ namespace Core.Types {
     public class SimilarInfo {
         public ObjectId BookId;
         public string ExternalId;
-        public BookComparerResult ComparerResult;
+        public double Coeff;
         
-        public SimilarInfo(BookInfo book, BookComparerResult comparerResult) {
+        public SimilarInfo(BookInfo book, double coeff) {
             BookId = book.Id;
             ExternalId = book.ExternalId;
-            ComparerResult = comparerResult;
+            Coeff = coeff;
         }
 
         public override bool Equals(object obj) {

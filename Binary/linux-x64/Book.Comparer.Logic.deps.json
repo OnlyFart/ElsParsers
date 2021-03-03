@@ -10,6 +10,7 @@
       "Book.Comparer.Logic/1.0.0": {
         "dependencies": {
           "Core": "1.0.0",
+          "Quickenshtein": "1.5.0",
           "runtimepack.Microsoft.NETCore.App.Runtime.linux-x64": "5.0.3"
         },
         "runtime": {
@@ -867,6 +868,14 @@
           "lib/netstandard2.0/NLog.dll": {
             "assemblyVersion": "4.0.0.0",
             "fileVersion": "4.7.7.12472"
+          }
+        }
+      },
+      "Quickenshtein/1.5.0": {
+        "runtime": {
+          "lib/netcoreapp3.0/Quickenshtein.dll": {
+            "assemblyVersion": "1.5.0.0",
+            "fileVersion": "1.5.0.0"
           }
         }
       },
@@ -2187,6 +2196,13 @@
       "sha512": "sha512-lCfAaKel4trne8Suf4/0aR9YPKDFLWKgqBupnHKNYx+cIjutF2BsVxfF2fAb+ObaYN3m5hDjx/ToVS15ouB+SA==",
       "path": "nlog/4.7.7",
       "hashPath": "nlog.4.7.7.nupkg.sha512"
+    },
+    "Quickenshtein/1.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/7R4eI7TaA0Aa/EIAquO08xljdxtoVUUrVAbcZ58FcHFI331fFabgh8aFviLtPZORkfgpCP/n/nuqEzM9ugjhA==",
+      "path": "quickenshtein/1.5.0",
+      "hashPath": "quickenshtein.1.5.0.nupkg.sha512"
     },
     "runtime.any.System.Collections/4.3.0": {
       "type": "package",

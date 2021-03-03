@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Book.Comparer.Logic.Configs;
 using Book.Comparer.Logic.Types;
-using Book.Comparer.Logic.Utils;
 using Core.Types;
+using Quickenshtein;
 
 namespace Book.Comparer.Logic.Comparers {
     public class BookComparer : IBookComparer {
@@ -21,14 +21,20 @@ namespace Book.Comparer.Logic.Comparers {
         /// <param name="book2"></param>
         /// <returns></returns>
         public BookComparerResult Compare(CompareBook book1, CompareBook book2) {
-            var result = new BookComparerResult {
-                Author = CheckLevensteinDiff(book1.Key.Authors, book2.Key.Authors, _bookComparerConfig.LevensteinBorder)
+            var author = CheckLevensteinDiff(book1.Key.Authors, book2.Key.Authors, _bookComparerConfig.LevensteinBorder);
+
+            if (!author.Success) {
+                return new BookComparerResult {
+                    Success = false,
+                    Coeff = 0
+                };
+            }
+
+            var name = CheckNameDiff(book1, book2);
+            return new BookComparerResult {
+                Success = name.Success,
+                Coeff = (author.Diff + name.Diff) / 2
             };
-            
-            //Если авторы не совпадают, то проверку названия не делаем, что бы ускорить проверку
-            result.Name = result.Author.Success ? CheckNameDiff(book1, book2) : new ComparerResult();
-            
-            return result;
         }
 
         /// <summary>
@@ -53,9 +59,9 @@ namespace Book.Comparer.Logic.Comparers {
         /// <param name="secondWord"></param>
         /// <param name="border"></param>
         /// <returns>Самое близкое расстояние между парами</returns>
-        private static ComparerResult CheckLevensteinDiff(ICollection<string> firstWord, ICollection<string> secondWord, double border) {
+        private static ComparerResult CheckLevensteinDiff(HashSet<string> firstWord, HashSet<string> secondWord, double border) {
             if (firstWord.Count <= 0 || secondWord.Count <= 0) {
-                return new ComparerResult();
+                return default;
             }
 
             foreach (var word1 in firstWord) {
@@ -66,7 +72,7 @@ namespace Book.Comparer.Logic.Comparers {
                         continue;
                     }
                     
-                    diff = Levenstein.Distance(word1, word2) / length;
+                    diff = (double)Levenshtein.GetDistance(word1, word2) / length;
 
                     if (diff <= border) {
                         return new ComparerResult(diff, true);
@@ -74,7 +80,7 @@ namespace Book.Comparer.Logic.Comparers {
                 }
             }
 
-            return new ComparerResult();
+            return default;
         }
         
         /// <summary>
@@ -86,7 +92,7 @@ namespace Book.Comparer.Logic.Comparers {
         /// <returns></returns>
         private static ComparerResult CheckLevensteinDiff(string firstWord, string secondWord, double border) {
             if (string.IsNullOrEmpty(firstWord) || string.IsNullOrEmpty(secondWord)) {
-                return new ComparerResult();
+                return default;
             }
             
             var length = Math.Max(firstWord.Length, secondWord.Length);
@@ -95,7 +101,7 @@ namespace Book.Comparer.Logic.Comparers {
                 return new ComparerResult(diff, false);
             }
             
-            diff = Levenstein.Distance(firstWord, secondWord) / length;
+            diff = (double)Levenshtein.GetDistance(firstWord, secondWord) / length;
             return new ComparerResult(diff, diff <= border);
         }
         
@@ -106,9 +112,9 @@ namespace Book.Comparer.Logic.Comparers {
         /// <param name="secondWords"></param>
         /// <param name="border"></param>
         /// <returns></returns>
-        private static ComparerResult CheckIntersectDiff(ICollection<string> firstWords, ICollection<string> secondWords, double border) {
+        private static ComparerResult CheckIntersectDiff(HashSet<string> firstWords, HashSet<string> secondWords, double border) {
             if (firstWords.Count < 5 || secondWords.Count < 5) {
-                return new ComparerResult();
+                return default;
             }
 
             var diff = 1 - (double) (firstWords.Count <= secondWords.Count ? 

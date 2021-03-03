@@ -63,10 +63,10 @@ namespace Book.Comparer.Logic.Types {
 
                 // Если паттерн ФИО стандартный или перестановок будет очень много, то перестановки не генерим
                 if (CheckFio(split, 2) || CheckFio(split, 3) || split.Length >= 5) {
-                    Authors.Add(normalizer.FirstFullOtherFirst(split));
+                    Authors.Add(Normalizer.FirstFullOtherFirst(split));
                 } else {
                     foreach (var permutation in split.AllPermutations()) {
-                        Authors.Add(normalizer.FirstFullOtherFirst(permutation.ToArray()));
+                        Authors.Add(Normalizer.FirstFullOtherFirst(permutation.ToArray()));
                     }
                 }
             }
