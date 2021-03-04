@@ -83,6 +83,9 @@ namespace Book.Comparer.Logic.BookGetter {
             var config = new BibParserConfig(authors, publishers);
             
             _logger.Info("Парсер БЗ создан");
+            _logger.Info($"Авторов {authors.Count}");
+            _logger.Info($"Издательств {publishers.Count}");
+            
             return new BibParser(_normalizer, config);
         }
         
@@ -92,13 +95,13 @@ namespace Book.Comparer.Logic.BookGetter {
                 var authors = book.Authors.Split(normalizer.AuthorsSeparator, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (var author in authors) {
-                    var tokens = GetTokens(author, 2)
+                    var tokens = GetTokens(author, 0)
                         .Where(t => char.IsUpper(t[0]) && !normalizer.NonSingAuthorWords.Contains(t))
                         .ToList();
 
                     // Отсекаю всякую дичь, которая иногда проскакивает в авторах
                     if (tokens.Count > 1 && tokens.Count < 5) {
-                        foreach (var token in tokens) {
+                        foreach (var token in tokens.Where(t => t.Length > 2)) {
                             result.Add(token);
                         }
                     }
