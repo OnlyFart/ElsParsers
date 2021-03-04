@@ -90,14 +90,14 @@ namespace Book.Comparer.Logic.BookGetter {
             var result = new HashSet<string>();
             foreach (var book in books.Where(b => !string.IsNullOrWhiteSpace(b.Authors))) {
                 var authors = book.Authors.Split(normalizer.AuthorsSeparator, StringSplitOptions.RemoveEmptyEntries);
-                
+
                 foreach (var author in authors) {
                     var tokens = GetTokens(author, 2)
                         .Where(t => char.IsUpper(t[0]) && !normalizer.NonSingAuthorWords.Contains(t))
                         .ToList();
 
                     // Отсекаю всякую дичь, которая иногда проскакивает в авторах
-                    if (tokens.Count <= 5) {
+                    if (tokens.Count > 1 && tokens.Count < 5) {
                         foreach (var token in tokens) {
                             result.Add(token);
                         }
