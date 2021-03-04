@@ -56,8 +56,12 @@ namespace Book.Comparer.Logic.Logic {
                 }
             }
 
+            if (bibAuthors.IsNullOrEmpty()) {
+                bibAuthors = GetAuthorsRgx(cleanBib, _normalizer);
+                bibName = bibName.Except(bibAuthors, StringComparer.InvariantCultureIgnoreCase).ToList();
+            }
             
-            var authors = (bibAuthors.IsNullOrEmpty() ? GetAuthorsRgx(cleanBib, _normalizer) : bibAuthors).StrJoin(", ");
+            var authors = bibAuthors.StrJoin(", ");
             var name = bibName.StrJoin(" ");
             var publisher = bibPublisher.StrJoin(", ");
 
