@@ -73,27 +73,13 @@ namespace Core.Types {
         /// </summary>
         public Dictionary<string, HashSet<SimilarInfo>> SimilarBooks;
 
+        /// <summary>
+        /// Прошла ли книга через сравнение в компараторе
+        /// </summary>
         public bool Compared;
 
-        public override bool Equals(object obj) {
-            if (ReferenceEquals(null, obj)) {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj)) {
-                return true;
-            }
-
-            var other = (BookInfo) obj;
-            return obj.GetType() == GetType() && Id == other.Id;
-        }
-
-        public override int GetHashCode() {
-            return Id.GetHashCode();
-        }
-
         public bool AddSimilar(BookInfo book, double coeff) {
-            var similarInfo = new SimilarInfo(book, coeff);
+            var similarInfo = new SimilarInfo(book.Id, book.ExternalId, coeff);
 
             lock (SimilarBooks) {
                 if (!SimilarBooks.TryGetValue(book.ElsName, out var similar)) {
