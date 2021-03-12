@@ -80,13 +80,13 @@ namespace Core.Types {
 
         public bool AddSimilar(BookInfo book, double coeff) {
             var similarInfo = new SimilarInfo(book.Id, book.ExternalId, coeff);
+            
+            if (!SimilarBooks.TryGetValue(book.ElsName, out var similar)) {
+                similar = new HashSet<SimilarInfo>();
+                SimilarBooks[book.ElsName] = similar;
+            }
 
-            lock (SimilarBooks) {
-                if (!SimilarBooks.TryGetValue(book.ElsName, out var similar)) {
-                    similar = new HashSet<SimilarInfo>();
-                    SimilarBooks[book.ElsName] = similar;
-                }
-                
+            lock (SimilarBooks) {    
                 return similar.Add(similarInfo);
             }
         }

@@ -54,10 +54,7 @@ namespace Book.Comparer.Logic {
         /// <param name="wordToBooks">Обратный индекс "слово из названия" -> "список книг"</param>
         /// <returns></returns>
         private SaveResult FindSimilar(CompareBook thisBook, IReadOnlyDictionary<string, List<CompareBook>> wordToBooks) {
-            var result = new SaveResult {
-                Book = thisBook.BookInfo,
-                SimilarBooks = new HashSet<BookInfo>()
-            };
+            var result = new SaveResult(thisBook.BookInfo);
 
             if (!thisBook.IsComparedBook) {
                 return result;

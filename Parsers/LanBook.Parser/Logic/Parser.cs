@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -25,6 +26,29 @@ namespace LanBook.Parser.Logic {
         private const int BOOKS_PER_PAGE = 1000;
 
         private static readonly string _allBooksUrlPattern = "https://e.lanbook.com/api/v2/catalog/books?category=0&limit=" + BOOKS_PER_PAGE  + "&page={0}";
+
+        protected override HttpClient GetClient() {
+            var handler = new HttpClientHandler {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            };
+            
+            if (!string.IsNullOrEmpty(_config.Proxy)) {
+                var split = _config.Proxy.Split(":");
+                handler.Proxy = new WebProxy(split[0], int.Parse(split[1])); 
+            }
+
+            var httpClient = new HttpClient(handler);
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/json, text/plain, */*");
+            httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
+            httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+            httpClient.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "empty");
+            httpClient.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "cors");
+            httpClient.DefaultRequestHeaders.Add("Sec-Fetch-Site", "same-origin");
+            httpClient.DefaultRequestHeaders.Add("Referer", "https://e.lanbook.com/books/");
+            httpClient.DefaultRequestHeaders.Add("User-Agent" ,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36");
+            
+            return httpClient;
+        }
 
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var getPageBlock = new TransformBlock<int, ApiResponse<BooksShortBody>>(async page => await GetSearchResponse(client, page));

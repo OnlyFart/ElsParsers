@@ -27,8 +27,12 @@ namespace Parser.Core.Logic {
 
         public async Task Run() {
             var processed = await GetProcessed();
-            var blocks = await RunInternal(HttpClientExtensions.GetClient(_config), processed);
+            var blocks = await RunInternal(GetClient(), processed);
             await DataflowExtension.WaitBlocks(blocks);
+        }
+
+        protected virtual HttpClient GetClient() {
+            return HttpClientExtensions.GetClient(_config);
         }
 
         protected abstract Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed);
