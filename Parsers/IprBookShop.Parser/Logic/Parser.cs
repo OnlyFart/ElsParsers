@@ -22,7 +22,7 @@ namespace IprBookShop.Parser.Logic {
         public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) {
         }
 
-        private static readonly Uri _apiUrl = new Uri("http://www.iprbookshop.ru/78575");
+        private static readonly Uri _apiUrl = new("https://www.iprbookshop.ru/78575");
         
         private const int BOOKS_PER_PAGE = 20;
 
@@ -60,7 +60,7 @@ namespace IprBookShop.Parser.Logic {
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
-            var doc = await client.GetHtmlDoc(new Uri($"http://www.iprbookshop.ru/{id}.html"));
+            var doc = await client.GetHtmlDoc(new Uri($"https://www.iprbookshop.ru/{id}.html"));
             if (doc == default) {
                 return default;
             }
