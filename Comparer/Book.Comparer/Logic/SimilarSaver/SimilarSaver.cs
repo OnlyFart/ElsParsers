@@ -23,7 +23,10 @@ namespace Book.Comparer.Logic.SimilarSaver {
                 foreach (var similarBook in saveResult.SimilarBooks) {
                     lock (similarBook.SimilarBooks) {
                         var clone = similarBook.SimilarBooks.ToDictionary(t => t.Key, t => t.Value.ToHashSet());
-                        var update = Builders<BookInfo>.Update.Set(t => t.SimilarBooks, clone);
+                        var update = Builders<BookInfo>.Update
+                            .Set(t => t.SimilarCount, clone.SelectMany(t => t.Value).Count())
+                            .Set(t => t.SimilarBooks, clone);
+                        
                         updates.Add(new UpdateManyModel<BookInfo>(GetEqualsFilter(similarBook), update));
                     }
                 }
@@ -55,6 +58,7 @@ namespace Book.Comparer.Logic.SimilarSaver {
                 .Set(t => t.Authors, book.Authors)
                 .Set(t => t.Publisher, book.Publisher)
                 .Set(t => t.Name, book.Name)
+                .Set(t => t.SimilarCount, book.SimilarBooks.SelectMany(t => t.Value).Count())
                 .Set(t => t.SimilarBooks, book.SimilarBooks);
 
             await _repository.Update(GetEqualsFilter(book), update);

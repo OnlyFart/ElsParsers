@@ -69,6 +69,12 @@ namespace Core.Types {
         public int Pages;
 
         /// <summary>
+        /// Кол-во похожих книг
+        /// </summary>
+        /// <returns></returns>
+        public int SimilarCount;
+
+        /// <summary>
         /// Коллекция "похожих" книг
         /// </summary>
         public Dictionary<string, HashSet<SimilarInfo>> SimilarBooks;
