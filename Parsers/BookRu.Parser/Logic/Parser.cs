@@ -60,7 +60,7 @@ namespace BookRu.Parser.Logic {
             var data = new {
                 cat_id = menuItem.Id,
                 as_view = 3,
-                years = new string[] { }
+                years = Array.Empty<string>()
             };
 
             _logger.Info($"Получаем каталог с ID = {menuItem.Id}, Name = {menuItem.Text}");

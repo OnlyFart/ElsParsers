@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -30,9 +31,32 @@ namespace Parser.Core.Logic {
             var blocks = await RunInternal(GetClient(), processed);
             await DataflowExtension.WaitBlocks(blocks);
         }
+        
 
-        protected virtual HttpClient GetClient() {
-            return HttpClientExtensions.GetClient(_config);
+        protected virtual HttpClient FillClient(HttpClient client) {
+            client.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+            client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
+            client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+            client.DefaultRequestHeaders.Add("User-Agent" ,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36");
+
+            return client;
+        }
+
+        protected virtual HttpClient GetBaseClient(IParserConfigBase config) {
+            var handler = new HttpClientHandler {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            };
+            
+            if (!string.IsNullOrEmpty(config.Proxy)) {
+                var split = config.Proxy.Split(":");
+                handler.Proxy = new WebProxy(split[0], int.Parse(split[1])); 
+            }
+            
+            return new HttpClient(handler);
+        }
+
+        private HttpClient GetClient() {
+            return FillClient(GetBaseClient(_config));
         }
 
         protected abstract Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed);

@@ -107,21 +107,21 @@ namespace IprBookShop.Parser.Logic {
         private static async Task<SearchResponseData> GetSearchResponse(HttpClient client, int page) {
             _logger.Info($"Запрашиваем страницу {page}");
 
-            var values = new[] {
-                new KeyValuePair<string, string>("profile_id", ""),
-                new KeyValuePair<string, string>("ugs", ""),
-                new KeyValuePair<string, string>("subpubhouse", ""),
-                new KeyValuePair<string, string>("title", ""),
-                new KeyValuePair<string, string>("pubhouse", ""),
-                new KeyValuePair<string, string>("author", ""),
-                new KeyValuePair<string, string>("yearleft", ""),
-                new KeyValuePair<string, string>("yearright", ""),
-                new KeyValuePair<string, string>("isbn", ""),
-                new KeyValuePair<string, string>("additparams[]", "3"),
-                new KeyValuePair<string, string>("options", ""),
-                new KeyValuePair<string, string>("action", "getList"),
-                new KeyValuePair<string, string>("page", $"{page}"),
-                new KeyValuePair<string, string>("available", "1")
+            var values = new KeyValuePair<string, string>[] {
+                new("profile_id", ""),
+                new("ugs", ""),
+                new("subpubhouse", ""),
+                new("title", ""),
+                new("pubhouse", ""),
+                new("author", ""),
+                new("yearleft", ""),
+                new("yearright", ""),
+                new("isbn", ""),
+                new("additparams[]", "3"),
+                new("options", ""),
+                new("action", "getList"),
+                new("page", $"{page}"),
+                new("available", "1")
             };
 
             return await client.PostJson<SearchResponseData>(_apiUrl, new FormUrlEncodedContent(values)) ?? new SearchResponseData();

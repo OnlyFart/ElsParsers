@@ -19,6 +19,33 @@ namespace AcademiaMoscow.Parser.Logic {
         
         protected override string ElsName => "AcademiaMoscow";
 
+        protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
+            var pagesCount = GetMaxPageCount(client, GetUrl(1));
+            
+            var getPageBlock = new TransformBlock<Uri, IEnumerable<Uri>>(async url => await GetBookLinks(client, url));
+            getPageBlock.CompleteMessage(_logger, "Получение всех ссылок на книги успешно завершено. Ждем загрузки всех книг.");
+            
+            var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(uris => Filter(uris, processed));
+            
+            var getBookBlock = new TransformBlock<Uri, BookInfo>(async url => await GetBook(client, url), GetParserOptions());
+            getBookBlock.CompleteMessage(_logger, "Загрузка всех книг завершено. Ждем сохранения.");
+            
+            var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
+            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await SaveBooks(books));
+            saveBookBlock.CompleteMessage(_logger, "Сохранение завершено.");
+            
+            getPageBlock.LinkTo(filterBlock);
+            filterBlock.LinkTo(getBookBlock);
+            getBookBlock.LinkTo(batchBlock);
+            batchBlock.LinkTo(saveBookBlock);
+            
+            for (var i = 1; i <= await pagesCount; i++) {
+                await getPageBlock.SendAsync(GetUrl(i));
+            }
+
+            return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
+        }
+        
         private async Task<BookInfo> GetBook(HttpClient client, Uri uri) {
             _logger.Info($"Получаем книгу {uri}");
             var doc = await client.GetHtmlDoc(uri);
@@ -78,33 +105,6 @@ namespace AcademiaMoscow.Parser.Logic {
                     yield return uri;
                 }
             }
-        }
-
-        protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
-            var pagesCount = GetMaxPageCount(client, GetUrl(1));
-            
-            var getPageBlock = new TransformBlock<Uri, IEnumerable<Uri>>(async url => await GetBookLinks(client, url));
-            getPageBlock.CompleteMessage(_logger, "Получение всех ссылок на книги успешно завершено. Ждем загрузки всех книг.");
-            
-            var filterBlock = new TransformManyBlock<IEnumerable<Uri>, Uri>(uris => Filter(uris, processed));
-            
-            var getBookBlock = new TransformBlock<Uri, BookInfo>(async url => await GetBook(client, url), GetParserOptions());
-            getBookBlock.CompleteMessage(_logger, "Загрузка всех книг завершено. Ждем сохранения.");
-            
-            var batchBlock = new BatchBlock<BookInfo>(_config.BatchSize);
-            var saveBookBlock = new ActionBlock<BookInfo[]>(async books => await SaveBooks(books));
-            saveBookBlock.CompleteMessage(_logger, "Сохранение завершено.");
-            
-            getPageBlock.LinkTo(filterBlock);
-            filterBlock.LinkTo(getBookBlock);
-            getBookBlock.LinkTo(batchBlock);
-            batchBlock.LinkTo(saveBookBlock);
-            
-            for (var i = 1; i <= await pagesCount; i++) {
-                await getPageBlock.SendAsync(GetUrl(i));
-            }
-
-            return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
         }
     }
 }
