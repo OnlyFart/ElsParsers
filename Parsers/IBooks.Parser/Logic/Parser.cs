@@ -17,7 +17,7 @@ namespace IBooks.Parser.Logic {
         
         protected override string ElsName => "IBooks";
         
-        private static Uri GetUrl(int page) => new Uri($"https://ibooks.ru/products?page={page}&paging=100");
+        private static Uri GetUrl(int page) => new($"https://ibooks.ru/products?page={page}&paging=100");
 
         protected override async Task<IDataflowBlock[]> RunInternal(HttpClient client, ISet<string> processed) {
             var pagesCount = await GetMaxPageCount(client, GetUrl(1));

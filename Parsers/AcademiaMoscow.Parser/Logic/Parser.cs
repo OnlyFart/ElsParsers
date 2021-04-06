@@ -15,7 +15,7 @@ namespace AcademiaMoscow.Parser.Logic {
     public class Parser : ParserBase {
         public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) { }
         
-        private static Uri GetUrl(int page) => new Uri($"https://academia-moscow.ru/catalogue/4831/?PAGEN_1={page}");
+        private static Uri GetUrl(int page) => new($"https://academia-moscow.ru/catalogue/4831/?PAGEN_1={page}");
         
         protected override string ElsName => "AcademiaMoscow";
 

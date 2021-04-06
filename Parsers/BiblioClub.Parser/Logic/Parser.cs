@@ -17,7 +17,7 @@ namespace BiblioClub.Parser.Logic {
     public class Parser : ParserBase {
         protected override string ElsName => "BiblioClub";
 
-        private static readonly Uri _apiUrl = new Uri("https://biblioclub.ru/services/service.php?page=books&m=GetShortInfo_S&parse&out=json");
+        private static readonly Uri _apiUrl = new("https://biblioclub.ru/services/service.php?page=books&m=GetShortInfo_S&parse&out=json");
 
         public Parser(IParserConfigBase config, IRepository<BookInfo> provider) : base(config, provider) {
 
@@ -57,7 +57,7 @@ namespace BiblioClub.Parser.Logic {
 
         private static async Task<IEnumerable<BookShortInfo>> GetShortInfo(HttpClient client, Uri url, ICollection<long> ids) {
             var pairs = new List<KeyValuePair<string, string>> {
-                new KeyValuePair<string, string>("books_sort", "1"),
+                new("books_sort", "1"),
             };
             
             _logger.Info($"Запрашиваем книги с индексами [{ids.Min()}, {ids.Max()}]");
