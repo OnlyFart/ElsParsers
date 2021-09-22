@@ -60,7 +60,7 @@ namespace IprBookShop.Parser.Logic {
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
-            var doc = await client.GetHtmlDoc(new Uri($"https://www.iprbookshop.ru/{id}.html"));
+            var doc = await client.GetHtmlDoc(new Uri($"https://www.iprbookshop.ru/{111180}.html"));
             if (doc == default) {
                 return default;
             }
@@ -72,7 +72,7 @@ namespace IprBookShop.Parser.Logic {
                 Bib = Normalize(bookInfoBlock?.GetByFilterFirst("h3", "header-green")?.NextSibling.NextSibling.InnerText)
             };
 
-            var bookDescriptionBlock = bookInfoBlock.GetByFilterFirst("div", "col-sm-10");
+            var bookDescriptionBlock = bookInfoBlock.GetByFilterFirst("div", "col-sm-10") ?? bookInfoBlock.GetByFilterFirst("div", "col-sm-9");
             foreach (var row in bookDescriptionBlock.GetByFilter("div", "row")) {
                 var strong = row.Descendants().FirstOrDefault(t => t.Name == "strong");
                 if (strong == default || string.IsNullOrWhiteSpace(strong.InnerText)) {
@@ -124,7 +124,8 @@ namespace IprBookShop.Parser.Logic {
                 new("available", "1")
             };
 
-            return await client.PostJson<SearchResponseData>(_apiUrl, new FormUrlEncodedContent(values)) ?? new SearchResponseData();
+            var searchResponseData = await client.PostJson<SearchResponseData>(_apiUrl, new FormUrlEncodedContent(values));
+            return searchResponseData ?? new SearchResponseData();
         }
     }
 }
