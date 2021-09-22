@@ -60,7 +60,7 @@ namespace IprBookShop.Parser.Logic {
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
-            var doc = await client.GetHtmlDoc(new Uri($"https://www.iprbookshop.ru/{111180}.html"));
+            var doc = await client.GetHtmlDoc(new Uri($"https://www.iprbookshop.ru/{id}.html"));
             if (doc == default) {
                 return default;
             }
@@ -69,7 +69,7 @@ namespace IprBookShop.Parser.Logic {
 
             var book = new BookInfo(id.ToString(), ElsName) {
                 Name = Normalize(bookInfoBlock?.GetByFilterFirst("h4", "header-orange")?.InnerText),
-                Bib = Normalize(bookInfoBlock?.GetByFilterFirst("h3", "header-green")?.NextSibling.NextSibling.InnerText)
+                Bib = Normalize(bookInfoBlock?.GetByFilter("p", "book-description")?.LastOrDefault()?.InnerText)
             };
 
             var bookDescriptionBlock = bookInfoBlock.GetByFilterFirst("div", "col-sm-10") ?? bookInfoBlock.GetByFilterFirst("div", "col-sm-9");
