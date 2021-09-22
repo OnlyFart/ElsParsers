@@ -96,7 +96,7 @@ namespace ProfSpo.Parser.Logic {
             foreach (var apiBook in (await GetResponse(client, token, page)).Data) {
                 var book = new BookInfo(apiBook.Id.ToString(), ElsName) {
                     Authors = apiBook.Authors,
-                    Bib = apiBook.Bibliography,
+                    Bib = apiBook.Bibliography ?? string.Empty,
                     ISBN = apiBook.ISBN,
                     Name = apiBook.Title,
                     Year = apiBook.Year,
