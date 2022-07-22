@@ -117,9 +117,10 @@ namespace IprBookShop.Parser.Logic {
                 new("yearleft", ""),
                 new("yearright", ""),
                 new("isbn", ""),
+                new("search_type", "2"),
                 new("additparams[]", "3"),
                 new("options", ""),
-                new("action", "getList"),
+                new("action", "getPublications"),
                 new("page", $"{page}"),
                 new("available", "1")
             };
