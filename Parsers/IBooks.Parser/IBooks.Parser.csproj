@@ -2,9 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net5.0</TargetFramework>
-        <RuntimeFrameworkVersion>5.0.0</RuntimeFrameworkVersion>
-        <RuntimeIdentifiers>win10-x64;linux-x64;</RuntimeIdentifiers>
+        <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
