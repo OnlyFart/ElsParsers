@@ -40,12 +40,6 @@ uraitparser --help
 Для работы каждого из парсеров необходима база данных [MongoDb](https://www.mongodb.com/).
 При повторных запусках парсеров будут дособраны книги, которые отсутствуют на текущий момент в базе
 
-## Публикация
-```
-dotnet publish -c Release -o Binary/win-x64 -r win-x64 --self-contained true
-dotnet publish -c Release -o Binary/linux-x64 -r linux-x64 --self-contained true
-```
-
 ## Пример собранных данных
 ```json
 { 
