@@ -677,169 +677,169 @@
         },
         "native": {
           "Microsoft.DiaSymReader.Native.amd64.dll": {
-            "fileVersion": "14.12.25830.2"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-console-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-console-l1-2-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-datetime-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-debug-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-errorhandling-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-file-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-file-l1-2-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-file-l2-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-handle-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-heap-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-interlocked-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-libraryloader-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-localization-l1-2-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-memory-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-namedpipe-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-processenvironment-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-processthreads-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-processthreads-l1-1-1.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-profile-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-rtlsupport-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-string-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-synch-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-synch-l1-2-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-sysinfo-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-timezone-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-core-util-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-conio-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-convert-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-environment-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-filesystem-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-heap-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-locale-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-math-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-multibyte-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-private-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-process-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-runtime-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-stdio-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-string-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-time-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "api-ms-win-crt-utility-l1-1-0.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           },
           "clrcompression.dll": {
-            "fileVersion": "42.42.42.42424"
+            "fileVersion": "0.0.0.0"
           },
           "clretwrc.dll": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "clrjit.dll": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "coreclr.dll": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "createdump.exe": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "dbgshim.dll": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "hostfxr.dll": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "hostpolicy.dll": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "mscordaccore.dll": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "mscordaccore_amd64_amd64_5.0.20.51904.dll": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "mscordbi.dll": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "mscorrc.dll": {
-            "fileVersion": "5.0.20.51904"
+            "fileVersion": "0.0.0.0"
           },
           "ucrtbase.dll": {
-            "fileVersion": "10.0.19041.1"
+            "fileVersion": "0.0.0.0"
           }
         }
       },
@@ -912,10 +912,10 @@
             "fileVersion": "0.0.0.0"
           },
           "runtimes/win/native/snappy32.dll": {
-            "fileVersion": "1.1.1.7"
+            "fileVersion": "0.0.0.0"
           },
           "runtimes/win/native/snappy64.dll": {
-            "fileVersion": "1.1.1.7"
+            "fileVersion": "0.0.0.0"
           }
         }
       },
@@ -1259,7 +1259,7 @@
     "System.Reflection.Emit.ILGeneration/4.3.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-+rD+UzHYxfXsT+YrMI0njdFaP/o1cnmSnRWy4os/NaWJC7FyCHrCOwiAKUwz+smQ3cPKZ8pAAv5zM5DDBG4K4w==",
+      "sha512": "sha512-59tBslAk9733NXLrUJrwNZEzbMAcu8k344OYo+wfSVygcgZ9lgBdGIzH/nrg3LYhXceynyvTc8t5/GD4Ri0/ng==",
       "path": "system.reflection.emit.ilgeneration/4.3.0",
       "hashPath": "system.reflection.emit.ilgeneration.4.3.0.nupkg.sha512"
     },
