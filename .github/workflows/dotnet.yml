@@ -108,30 +108,3 @@ jobs:
       with:
         name: ElsParsers-${{ matrix.os }}
         path: ${{ github.workspace }}/dist/small
-    
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v2
-      - name: download-artifact-ubuntu
-        if: ${{ steps.last_release.outputs.tag_name != steps.get-version.outputs.version }}
-        uses: actions/download-artifact@v3
-        with:
-          name: ElsParsers-ubuntu-latest
-          path: ${{ github.workspace }}/linux    
-          
-      - name: download-artifact-windows
-        if: ${{ steps.last_release.outputs.tag_name != steps.get-version.outputs.version }}
-        uses: actions/download-artifact@v3
-        with:
-          name: ElsParsers-windows-latest
-          path: ${{ github.workspace }}/windows
-          
-      - name: download-artifact-macos
-        if: ${{ steps.last_release.outputs.tag_name != steps.get-version.outputs.version }}
-        uses: actions/download-artifact@v3
-        with:
-          name: ElsParsers-macos-latest
-          path: ${{ github.workspace }}/macos
