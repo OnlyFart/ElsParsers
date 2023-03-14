@@ -44,12 +44,13 @@ namespace Parser.Core.Logic {
 
         protected virtual HttpClient GetBaseClient(IParserConfigBase config) {
             var handler = new HttpClientHandler {
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
+                UseProxy = false
             };
             
             if (!string.IsNullOrEmpty(config.Proxy)) {
-                var split = config.Proxy.Split(":");
-                handler.Proxy = new WebProxy(split[0], int.Parse(split[1])); 
+                handler.Proxy = new WebProxy(config.Proxy);
+                handler.UseProxy = true;
             }
             
             return new HttpClient(handler);

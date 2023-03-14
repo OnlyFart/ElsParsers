@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
@@ -10,7 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="TurnerSoftware.SitemapTools" Version="0.6.0" />
+      <PackageReference Include="TurnerSoftware.SitemapTools" Version="0.7.2" />
     </ItemGroup>
 
 </Project>
