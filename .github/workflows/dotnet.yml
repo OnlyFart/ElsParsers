@@ -28,79 +28,79 @@ jobs:
       run: dotnet test --no-build --verbosity normal
     - name: AcademiaMoscow.Parser
       run: >
-        dotnet publish Parsers/AcademiaMoscow.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/AcademiaMoscow.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: BiblioClub.Parser
       run: >
-        dotnet publish Parsers/BiblioClub.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/BiblioClub.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: BiblioRossica.Parser
       run: >
-        dotnet publish Parsers/BiblioRossica.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/BiblioRossica.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: BookRu.Parser
       run: >
-        dotnet publish Parsers/BookRu.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/BookRu.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: IBooks.Parser
       run: >
-        dotnet publish Parsers/BookRu.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/BookRu.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: IprBookShop.Parser
       run: >
-        dotnet publish Parsers/IprBookShop.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/IprBookShop.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: LanBook.Parser
       run: >
-        dotnet publish Parsers/LanBook.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/LanBook.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: ProfSpo.Parser
       run: >
-        dotnet publish Parsers/ProfSpo.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/ProfSpo.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: RuCont.Parser
       run: >
-        dotnet publish Parsers/RuCont.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/RuCont.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: StudentLibrary.Parser
       run: >
-        dotnet publish Parsers/StudentLibrary.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/StudentLibrary.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: Urait.Parser
       run: >
-        dotnet publish Parsers/Urait.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/Urait.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: Znanium.Parser
       run: >
-        dotnet publish Parsers/Znanium.Parser -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Parsers/Znanium.Parser -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
     - name: Book.Comparer
       run: >
-        dotnet publish Comparer/Book.Comparer -c release -p:PublishDir=../dist/small --no-self-contained 
+        dotnet publish Comparer/Book.Comparer -c release -p:PublishDir=/dist/small --no-self-contained 
         -p:PublishSingleFile=true -p:DebugType=embedded -p:PublishTrimmed=false 
         -p:EnableCompressionInSingleFile=false --use-current-runtime
         
