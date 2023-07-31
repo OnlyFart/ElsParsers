@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using NLog;
-using Parser.Core.Configs;
 
 namespace Parser.Core.Extensions {
     public static class HttpClientExtensions {

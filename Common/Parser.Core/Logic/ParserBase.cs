@@ -10,7 +10,6 @@ using Core.Types;
 using MongoDB.Driver;
 using NLog;
 using Parser.Core.Configs;
-using Parser.Core.Extensions;
 
 namespace Parser.Core.Logic {
     public abstract class ParserBase {

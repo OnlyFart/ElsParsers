@@ -1,17 +1,4 @@
-﻿using System.Threading.Tasks;
-using CommandLine;
-using LanBook.Parser.Configs;
-using Ninject;
-using Parser.Core.IoC;
+﻿using LanBook.Parser.Configs;
+using Parser.Core;
 
-namespace LanBook.Parser {
-    class Program {
-        private static async Task Main(string[] args) {
-            await CommandLine.Parser.Default.ParseArguments<Options>(args)
-                .WithParsedAsync(async options => {
-                    var kernel = new StandardKernel(new CoreNinjectModule(options));
-                    await kernel.Get<Logic.Parser>().Run();
-                });
-        }
-    }
-}
+await DefaultRunner.Run<LanBook.Parser.Logic.Parser, Options>(args);

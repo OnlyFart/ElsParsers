@@ -10,7 +10,6 @@ using Book.Comparer.Logic.SimilarSaver;
 using Book.Comparer.Logic.Types;
 using Book.Comparer.Types;
 using Core.Extensions;
-using Core.Types;
 using NLog;
 
 namespace Book.Comparer.Logic {
