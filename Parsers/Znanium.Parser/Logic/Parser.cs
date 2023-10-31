@@ -52,37 +52,36 @@ namespace Znanium.Parser.Logic {
             var (response, statusCode) = await client.GetStringWithTriesAsync(new Uri($"https://znanium.com/catalog/document?id={id}"));
 
             var book = new BookInfo(id.ToString(), ElsName);
-            if (statusCode == HttpStatusCode.NotFound) {
+            if (statusCode == HttpStatusCode.NotFound || response == default) {
                 return book;
             }
-            
+
             var doc = new HtmlDocument();
             doc.LoadHtml(response);
-            
-            var bookContent = doc.DocumentNode.GetByFilterFirst("div", "book-content");
-            var bookInfoBlock = bookContent.GetByFilterFirst("div", "desktop-book-header");
-            
-            book.Name = bookInfoBlock.GetByFilterFirst("h1")?.InnerText.Trim();
-            book.Bib = doc.GetElementbyId("doc-biblio-card").InnerText.Trim();
-            
-            foreach (var div in bookContent.GetByFilter("div", "book-links2")) {
+
+            var bookContent = doc.DocumentNode.GetByFilterFirst("div", "book-single__top-content-right");
+            book.Name = doc.DocumentNode.GetByFilterFirst("h1", "book-single__title")?.InnerText.Trim();
+            book.Bib = doc.DocumentNode.GetByFilter("div", "tab-panel").FirstOrDefault(t => t.GetAttributeValue("nav", string.Empty) == "bib")?.InnerText;
+
+            foreach (var div in bookContent.GetByFilter("div", "book-link")) {
                 var name = div.InnerText.Trim();
                 var value = div.GetByFilter("a");
-                
+
                 if (name.Contains("Издательство")) {
                     book.Publisher = value.FirstOrDefault()?.InnerText;
                 } else if (name.Contains("Авторы")) {
                     book.Authors = value.Where(t => !string.IsNullOrEmpty(t.InnerText)).Select(t => t?.InnerText?.Trim()).StrJoin(", ");
                 }
             }
-            
-            foreach (var div in bookContent.GetByFilter("div", "book-chars__inner")) {
-                var name = div.GetByFilterFirst("div", "book-chars__name")?.InnerText.ToLower().Trim();
-                if (string.IsNullOrEmpty(name)) {
+
+            foreach (var div in bookContent.GetByFilter("div", "book-link")) {
+                var split = div.InnerText.Split(":");
+                if (split.Length != 2) {
                     continue;
                 }
-                
-                var value = div.GetByFilterFirst("div", "book-chars__view")?.InnerText.Trim();
+
+                var name = split[0].ToLower().Trim();
+                var value = split[1].Trim();
 
                 if (name == "isbn") {
                     book.ISBN = value;
