@@ -65,15 +65,14 @@ namespace IprBookShop.Parser.Logic {
                 return default;
             }
 
-            var bookInfoBlock = doc.DocumentNode.GetByFilterFirst("div", "book-information");
+            var bookInfoBlock = doc.DocumentNode.GetByFilterFirst("div", "row-book");
 
             var book = new BookInfo(id.ToString(), ElsName) {
-                Name = Normalize(bookInfoBlock?.GetByFilterFirst("h4", "header-orange")?.InnerText),
-                Bib = Normalize(bookInfoBlock?.GetByFilter("p", "book-description")?.LastOrDefault()?.InnerText)
+                Name = Normalize(bookInfoBlock?.GetByFilterFirst("h4", "mb-5")?.InnerText),
+                Bib = Normalize(doc.DocumentNode?.GetByFilter("p", "book-description")?.LastOrDefault()?.InnerText)
             };
-
-            var bookDescriptionBlock = bookInfoBlock.GetByFilterFirst("div", "col-sm-10") ?? bookInfoBlock.GetByFilterFirst("div", "col-sm-9");
-            foreach (var row in bookDescriptionBlock.GetByFilter("div", "row")) {
+            
+            foreach (var row in doc.DocumentNode.GetByFilter("div", "row")) {
                 var strong = row.Descendants().FirstOrDefault(t => t.Name == "strong");
                 if (strong == default || string.IsNullOrWhiteSpace(strong.InnerText)) {
                     continue;
