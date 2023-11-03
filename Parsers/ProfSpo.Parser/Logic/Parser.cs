@@ -62,7 +62,7 @@ namespace ProfSpo.Parser.Logic {
         }
 
         private static async Task<Info> GetResponse(HttpClient client, string token, int page) {
-            var apiResponse = await client.PostJson<ApiResponse>(new Uri("https://profspo.ru/catalog/search"), GetParams(token, page));
+            var apiResponse = await client.PostJson<ApiResponse>(new Uri("https://profspo.ru/catalog/books/professions-and-specialties/search"), GetParams(token, page));
             return apiResponse?.Info ?? new Info();
         }
 
@@ -71,9 +71,9 @@ namespace ProfSpo.Parser.Logic {
                 new("title", ""),
                 new("authors", ""),
                 new("publishers", ""),
+                new("higher_education", "1"),
                 new("year1", ""),
                 new("year2", ""),
-                new("type", ""),
                 new("profileCode", ""),
                 new("profileId", ""),
                 new("discipline_id", ""),
