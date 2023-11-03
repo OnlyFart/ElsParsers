@@ -29,7 +29,7 @@ namespace StudentLibrary.Parser.Logic {
             }
 
             var id = uri.Segments.Last().Split(".")[0];
-            var detailedDescriptionBlock = doc.DocumentNode.GetByFilterFirst("div", "reader-info");
+            var detailedDescriptionBlock = doc.DocumentNode.GetByFilterFirst("div", "book_sticker_book");
             var book = new BookInfo(id, ElsName) {
                 Name = doc.DocumentNode.GetByFilterFirst("h2")?.InnerText
             };
@@ -54,8 +54,8 @@ namespace StudentLibrary.Parser.Logic {
                         .Split(' ')
                         .First(), out book.Pages);
                     if(value.Contains("ISBN")) {
-                        book.ISBN = value.Split(new []{ "ISBN" }, StringSplitOptions.None)[1].Trim()
-                            .Split(new []{ ". " }, StringSplitOptions.None)
+                        book.ISBN = value.Split(new []{ "ISBN"}, StringSplitOptions.None)[1].Trim()
+                            .Split(new []{ ", " }, StringSplitOptions.None)
                             .First();
                     }
                 } else if (name.Contains("Издательство")) {
@@ -75,7 +75,7 @@ namespace StudentLibrary.Parser.Logic {
             
             return doc == default
                 ? Enumerable.Empty<Uri>()
-                : doc.DocumentNode.GetByFilter("div", "wrap-title-book-sengine")
+                : doc.DocumentNode.GetByFilter("div", "book_sticker_sengine_librarian_right_coll")
                     .Select(div => div.GetByFilterFirst("a")
                         ?.Attributes["href"]
                         ?.Value)
@@ -84,12 +84,10 @@ namespace StudentLibrary.Parser.Logic {
 
         private static async Task<int> GetMaxPageCount(HttpClient client, Uri uri) {
             var doc = await client.GetHtmlDoc(uri);
-
-            return doc == default
+            var a = doc.DocumentNode.GetByFilterFirst("a", "a_jmp_page");
+            return a == default
                 ? 1
-                : doc.DocumentNode.GetByFilterFirst("ul", "pagination-ros-num va-m")
-                    ?.ChildNodes.Select(node => int.TryParse(node.InnerText, out var page) ? page : 1)
-                    .Max() ?? 1;
+                : int.TryParse(a.InnerText, out var pages) ? pages : 1;
         }
 
         private static IEnumerable<Uri> Filter(IEnumerable<Uri> uris, ISet<string> processed) {
