@@ -44,7 +44,8 @@ namespace Parser.Core.Logic {
         protected virtual HttpClient GetBaseClient(IParserConfigBase config) {
             var handler = new HttpClientHandler {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
-                UseProxy = false
+                UseProxy = false,
+                ServerCertificateCustomValidationCallback = (_, _, _, _) => true,
             };
             
             if (!string.IsNullOrEmpty(config.Proxy)) {
