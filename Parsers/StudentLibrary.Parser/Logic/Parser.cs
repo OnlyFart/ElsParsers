@@ -54,8 +54,8 @@ namespace StudentLibrary.Parser.Logic {
                         .Split(' ')
                         .First(), out book.Pages);
                     if(value.Contains("ISBN")) {
-                        book.ISBN = value.Split(new []{ "ISBN"}, StringSplitOptions.None)[1].Trim()
-                            .Split(new []{ ", " }, StringSplitOptions.None)
+                        book.ISBN = value.Split(["ISBN"], StringSplitOptions.None)[1].Trim()
+                            .Split([", "], StringSplitOptions.None)
                             .First();
                     }
                 } else if (name.Contains("Издательство")) {
@@ -125,7 +125,7 @@ namespace StudentLibrary.Parser.Logic {
                 await getPageBlock.SendAsync(GetUrl(i));
             }
 
-            return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock };
+            return [getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock];
         }
     }
 }

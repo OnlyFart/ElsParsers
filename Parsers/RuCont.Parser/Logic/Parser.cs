@@ -43,7 +43,7 @@ namespace RuCont.Parser.Logic {
                 await getPageBlock.SendAsync(sitemap.Location);
             }
 
-            return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
+            return [getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock];
         }
         
         private static IEnumerable<string> Filter(SitemapFile sitemap, ISet<string> processed) {
@@ -71,7 +71,7 @@ namespace RuCont.Parser.Logic {
             }
 
             var authors = new List<string>();
-            foreach (var author in book.Authors ?? new string[]{ }) {
+            foreach (var author in book.Authors ?? []) {
                 var cleanAuthor = Regex.Replace(author, @"\((.*?)\)", string.Empty).Trim();
                 if (!string.IsNullOrWhiteSpace(book.Bib)) {
                     try {

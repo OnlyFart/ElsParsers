@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -46,7 +47,7 @@ namespace BookRu.Parser.Logic {
                 await getBookIdsBlock.SendAsync(categoryId);
             }
             
-            return new IDataflowBlock[] {getBookIdsBlock, filterBlock, getBooksBlock, batchBlock, saveBookBlock};
+            return [getBookIdsBlock, filterBlock, getBooksBlock, batchBlock, saveBookBlock];
         }
         
         private async Task<JsonDocument> GetNextData(HttpClient client) {
@@ -86,9 +87,12 @@ namespace BookRu.Parser.Logic {
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, string buildId, string id) {
-            var response = await client.GetStringAsync(new Uri($"https://book.ru/_next/data/{buildId}/book/{id}.json?"));
-            var json = JsonDocument.Parse(response);
-
+            var response = await client.GetAsync(new Uri($"https://book.ru/_next/data/{buildId}/book/{id}.json?"));
+            if (response.StatusCode != HttpStatusCode.OK) {
+                return default;
+            }
+            
+            var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
             var items = JsonConvert.DeserializeObject<BookItem[]>(json.RootElement.GetProperty("pageProps").GetProperty("serverDataBook").GetProperty("item").GetRawText());
 
             if (items.Length == 0) {

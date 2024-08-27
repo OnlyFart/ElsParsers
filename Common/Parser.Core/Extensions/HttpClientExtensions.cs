@@ -22,6 +22,7 @@ namespace Parser.Core.Extensions {
                     }
                     
                     if (response.StatusCode != HttpStatusCode.OK) {
+                        await Task.Delay(i * 1000);
                         continue;
                     }
                     

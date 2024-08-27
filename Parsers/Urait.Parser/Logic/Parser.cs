@@ -39,7 +39,7 @@ namespace Urait.Parser.Logic {
             
             await filterBlock.SendAsync(await GetLinksSitemaps(client, new Uri("https://urait.ru/sitemap.xml")));
             
-            return new IDataflowBlock[] {filterBlock, getBookBlock, batchBlock, saveBookBlock};
+            return [filterBlock, getBookBlock, batchBlock, saveBookBlock];
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, Uri uri) {

@@ -12,7 +12,7 @@ namespace Book.Comparer.Logic.Utils {
         private static readonly Regex _nonCharacter = new("\\W", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _nonDigits = new("\\D", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         
-        public readonly string[] AuthorsSeparator = { ",", ";", ":" };
+        public readonly string[] AuthorsSeparator = [",", ";", ":"];
         public readonly HashSet<string> NonSingAuthorWords;
         public readonly HashSet<string> NonSignBibWords;
 
@@ -82,7 +82,7 @@ namespace Book.Comparer.Logic.Utils {
         /// <param name="str"></param>
         /// <returns></returns>
         public IEnumerable<string> SplitWords(string str) {
-            return string.IsNullOrWhiteSpace(str) ? new string[] { } : _nonCharacter.Split(str);
+            return string.IsNullOrWhiteSpace(str) ? [] : _nonCharacter.Split(str);
         }
 
         /// <summary>

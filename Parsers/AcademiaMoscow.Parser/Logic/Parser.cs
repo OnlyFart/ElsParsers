@@ -43,7 +43,7 @@ namespace AcademiaMoscow.Parser.Logic {
                 await getPageBlock.SendAsync(GetUrl(i));
             }
 
-            return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
+            return [getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock];
         }
         
         private async Task<BookInfo> GetBook(HttpClient client, Uri uri) {

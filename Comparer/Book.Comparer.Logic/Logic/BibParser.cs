@@ -13,10 +13,10 @@ namespace Book.Comparer.Logic.Logic {
         private readonly Normalizer _normalizer;
         private readonly BibParserConfig _config;
 
-        private static readonly Regex[] AuthorRegexs = {
+        private static readonly Regex[] AuthorRegexs = [
             new(@"(\b|\s)(?<SecondName>\w+)(?<io>\s\w\.){1,2}(\b|\s)", RegexOptions.Compiled),
             new(@"(\b|\s)(?<io>\w\.\s){1,2}(?<SecondName>\w+)(\b|\s)", RegexOptions.Compiled)
-        };
+        ];
 
         public BibParser(Normalizer normalizer, BibParserConfig config) {
             _normalizer = normalizer;

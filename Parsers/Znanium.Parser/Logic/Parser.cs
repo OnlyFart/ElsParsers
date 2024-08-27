@@ -45,23 +45,27 @@ namespace Znanium.Parser.Logic {
                 await getPageBlock.SendAsync(sitemap.Location);
             }
 
-            return new IDataflowBlock[]{getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
+            return [getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock];
         }
 
         private async Task<BookInfo> GetBook(HttpClient client, long id) {
-            var (response, statusCode) = await client.GetStringWithTriesAsync(new Uri($"https://znanium.com/catalog/document?id={id}"));
-
-            var book = new BookInfo(id.ToString(), ElsName);
+            var url = new Uri($"https://znanium.com/catalog/document?id={id}");
+            var (response, statusCode) = await client.GetStringWithTriesAsync(url);
+            
             if (statusCode == HttpStatusCode.NotFound || response == default) {
-                return book;
+                _logger.Warn($"Не удалось загрузить книгу {url}. {statusCode}");
+                return default;
             }
-
+            
+            _logger.Debug($"Получена книга {url}");
+            
+            var book = new BookInfo(id.ToString(), ElsName);
             var doc = new HtmlDocument();
             doc.LoadHtml(response);
 
             var bookContent = doc.DocumentNode.GetByFilterFirst("div", "book-single__top-content-right");
             book.Name = doc.DocumentNode.GetByFilterFirst("h1", "book-single__title")?.InnerText.Trim();
-            book.Bib = doc.DocumentNode.GetByFilter("div", "tab-panel").FirstOrDefault(t => t.GetAttributeValue("nav", string.Empty) == "bib")?.InnerText;
+            book.Bib = doc.DocumentNode.GetByFilter("div", "tab-panel").FirstOrDefault(t => t.GetAttributeValue("nav", string.Empty) == "bib")?.InnerText?.Trim();
 
             foreach (var div in bookContent.GetByFilter("div", "book-link")) {
                 var name = div.InnerText.Trim();

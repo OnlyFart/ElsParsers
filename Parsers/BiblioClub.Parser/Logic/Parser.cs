@@ -48,7 +48,7 @@ namespace BiblioClub.Parser.Logic {
                 await batchBlock1.SendAsync(i);
             }
 
-            return new IDataflowBlock[] {batchBlock1, getPageBlock, filterBlock, batchBlock2, getBibBlock, batchBlock3, saveBookBlock};
+            return [batchBlock1, getPageBlock, filterBlock, batchBlock2, getBibBlock, batchBlock3, saveBookBlock];
         }
 
         private static IEnumerable<BookShortInfo> Filter(IEnumerable<BookShortInfo> shortInfos, ISet<string> processed) {

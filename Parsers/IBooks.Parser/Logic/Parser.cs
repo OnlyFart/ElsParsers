@@ -41,7 +41,7 @@ namespace IBooks.Parser.Logic {
                 await getBooksBlock.SendAsync(i);
             }
 
-            return new IDataflowBlock[] {getBooksBlock, filterBlock, batchBlock, saveBookBlock};
+            return [getBooksBlock, filterBlock, batchBlock, saveBookBlock];
         }
         
         private static IEnumerable<BookInfo> Filter(IEnumerable<BookInfo> books, ISet<string> processed) {

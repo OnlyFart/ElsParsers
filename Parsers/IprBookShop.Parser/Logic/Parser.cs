@@ -52,7 +52,7 @@ namespace IprBookShop.Parser.Logic {
                 await getPageBlock.SendAsync(i);
             }
 
-            return new IDataflowBlock[] {getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock};
+            return [getPageBlock, filterBlock, getBookBlock, batchBlock, saveBookBlock];
         }
 
         private static string Normalize(string str) {
